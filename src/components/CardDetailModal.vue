@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div class="modal-overlay" @click.self="close">
+    <div class="modal-overlay" @mousedown="onOverlayMouseDown" @mouseup="onOverlayMouseUp">
       <div class="card-detail" role="dialog" aria-modal="true" aria-labelledby="card-detail-word">
         <header class="card-detail__header">
           <h2 id="card-detail-word" class="card-detail__word">{{ card.word }}</h2>
@@ -69,6 +69,17 @@ const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
 
 function close(): void {
   emit('update:modelValue', false)
+}
+
+let overlayMouseDowned = false
+
+function onOverlayMouseDown(e: MouseEvent): void {
+  overlayMouseDowned = e.target === e.currentTarget
+}
+
+function onOverlayMouseUp(e: MouseEvent): void {
+  if (overlayMouseDowned && e.target === e.currentTarget) close()
+  overlayMouseDowned = false
 }
 
 function playAudio(): void {

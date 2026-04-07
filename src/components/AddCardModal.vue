@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div class="modal-overlay" @click.self="close">
+    <div class="modal-overlay" @mousedown="onOverlayMouseDown" @mouseup="onOverlayMouseUp">
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <header class="modal__header">
           <h3 id="modal-title" class="modal__title">Add card</h3>
@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useCardsStore } from '../stores/cards'
 import { useTagsStore } from '../stores/tags'
 import { createCard } from '../api/cards'
@@ -100,6 +100,24 @@ function close(): void {
   error.value = ''
   emit('update:modelValue', false)
 }
+
+let overlayMouseDowned = false
+
+function onOverlayMouseDown(e: MouseEvent): void {
+  overlayMouseDowned = e.target === e.currentTarget
+}
+
+function onOverlayMouseUp(e: MouseEvent): void {
+  if (overlayMouseDowned && e.target === e.currentTarget) close()
+  overlayMouseDowned = false
+}
+
+function handleKeydown(e: KeyboardEvent): void {
+  if (e.key === 'Escape') close()
+}
+
+onMounted(() => document.addEventListener('keydown', handleKeydown))
+onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
 
 interface AudioResponse { audioUrl?: string }
 
