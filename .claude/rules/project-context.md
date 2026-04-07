@@ -33,7 +33,7 @@ AI-assisted flashcard PWA for learning English vocabulary — functionally simil
 Mochi Cards. No multi-user accounts. Cards belong to one user on one instance.
 
 On card creation the server automatically:
-1. Calls an LLM → generates example sentences + usage notes.
+1. Calls an LLM → generates a dictionary entry (transcription + 2–4 popular meanings) and one AI example sentence.
 2. Calls a TTS service → generates a British-English pronunciation audio file,
    stores it on the server, and attaches the URL to the card.
 
@@ -49,7 +49,7 @@ On card creation the server automatically:
       ├─ GET/POST/PUT/DELETE /api/cards   → CRUD on cards
       ├─ GET/POST            /api/decks   → CRUD on decks
       ├─ GET/POST            /api/tags    → CRUD on tags
-      ├─ POST /api/generate-examples      → calls LLM, returns JSON
+      ├─ POST /api/generate-card-content      → calls LLM, returns { dictionary, aiExample }
       ├─ POST /api/generate-audio         → calls TTS, saves .mp3, returns { audioUrl }
       └─ static serving of saved audio files
             │
@@ -123,7 +123,7 @@ show a clear message, do not crash, do not silently skip audio.
         cards.ts                  # GET/POST/PUT/DELETE /api/cards
         decks.ts                  # GET/POST /api/decks
         tags.ts                   # GET /api/tags
-        generate-examples.ts
+        generate-card-content.ts
         generate-audio.ts
       services/
         llm.ts                    # LLM client (provider-agnostic)
@@ -197,15 +197,39 @@ in the future without rewriting the review session UI.
 
 ### Card Creation
 
-When the user submits a new card (word or phrase):
+The user fills in:
+- **Word** (required)
+- **Translation / Definition** (required — their own translation or meaning)
+- **Examples** (optional — their own example sentences, one per line)
+- **Tags** (optional — hierarchical, `/`-separated)
 
-1. Frontend calls POST /api/generate-examples → receives definition + examples.
-2. Frontend calls POST /api/generate-audio with the word/phrase →
-   server generates audio, stores file, returns { audioUrl }.
-3. Frontend calls POST /api/cards with the full card payload →
+On submit the frontend:
+1. Calls `POST /api/generate-card-content` and `POST /api/generate-audio` **in parallel**.
+   - `generate-card-content` returns `{ dictionary: { transcription, meanings }, aiExample }`.
+   - `generate-audio` returns `{ audioUrl }` or 503 (degraded gracefully).
+2. Calls `POST /api/cards` with the full payload (user fields + AI fields merged) →
    server inserts the row into SQLite and returns the saved card.
-4. Pinia store is updated with the returned card (client cache).
-5. When the card is opened, the stored audio is played directly from audioUrl.
+3. Pinia store is updated with the returned card (client cache).
+4. User-provided fields (`definition`, `examples`) are **never overwritten** by AI output.
+
+### Card Data Model
+
+| Field | Source | User-editable |
+|-------|--------|---------------|
+| `word` | User | Yes |
+| `definition` | User (translation) | Yes |
+| `examples` | User (own sentences) | Yes |
+| `dictionary` | LLM (`{ transcription: string; meanings: string[] }`) | No |
+| `aiExample` | LLM (one sentence) | No |
+| `audioUrl` | TTS | No |
+| `tags` | User | Yes |
+| `interval`, `dueDate` | Scheduling algorithm | No |
+
+### Tags (future)
+
+Tags will use a combobox with autocomplete: typing filters existing tags, selecting
+confirms, and entering a non-existing name creates it. Hierarchy via `/` is already
+supported in the data model. Combobox UI is planned for a future release.
 
 ### Import / Export
 
