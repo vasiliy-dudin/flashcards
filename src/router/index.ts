@@ -4,6 +4,7 @@ import type { RouteRecordRaw } from 'vue-router'
 const routes: RouteRecordRaw[] = [
   { path: '/', component: () => import('../views/InboxView.vue') },
   { path: '/deck/:id', component: () => import('../views/DeckView.vue') },
+  { path: '/tag/:name', component: () => import('../views/TagView.vue') },
   { path: '/settings', component: () => import('../views/SettingsView.vue') },
 ]
 
