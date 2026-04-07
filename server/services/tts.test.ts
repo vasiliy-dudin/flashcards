@@ -45,6 +45,16 @@ describe('generateAudio', () => {
     expect(result).toMatchObject({ degraded: true, error: 'TTS quota exceeded' })
   })
 
+  it('returns degraded when 200 response has no audioContent field', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ unexpectedField: 'value' }),
+    } as Response)
+
+    const result = await generateAudio('hello')
+    expect(result).toMatchObject({ degraded: true, error: 'Unexpected TTS API response shape' })
+  })
+
   it('returns degraded on other API errors', async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: false,
