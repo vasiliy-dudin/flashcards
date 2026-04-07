@@ -4,6 +4,5 @@
   </main>
 </template>
 
-<script lang="ts">
-export default { name: 'InboxView' }
+<script setup lang="ts">
 </script>

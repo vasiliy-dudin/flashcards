@@ -33,13 +33,21 @@ function buildPrompt(word: string): string {
   )
 }
 
+function isGeminiApiResponse(data: unknown): data is GeminiApiResponse {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'candidates' in data &&
+    Array.isArray((data as { candidates: unknown }).candidates) &&
+    typeof (data as GeminiApiResponse).candidates[0]?.content?.parts?.[0]?.text === 'string'
+  )
+}
+
 function extractText(data: unknown): string {
-  const response = data as GeminiApiResponse
-  const text = response?.candidates?.[0]?.content?.parts?.[0]?.text
-  if (typeof text !== 'string') {
+  if (!isGeminiApiResponse(data)) {
     throw new Error('Unexpected Gemini API response shape')
   }
-  return text
+  return data.candidates[0].content.parts[0].text
 }
 
 export class GeminiProvider implements LlmProvider {

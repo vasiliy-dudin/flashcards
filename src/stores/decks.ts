@@ -13,9 +13,16 @@ export const useDecksStore = defineStore('decks', () => {
     decks.value = decks.value.filter((d) => d.id !== id)
   }
 
+  function updateDeck(id: string, patch: Partial<Omit<Deck, 'id' | 'createdAt'>>): void {
+    const index = decks.value.findIndex((d) => d.id === id)
+    if (index !== -1) {
+      decks.value[index] = { ...decks.value[index], ...patch }
+    }
+  }
+
   function getDeckById(id: string): Deck | undefined {
     return decks.value.find((d) => d.id === id)
   }
 
-  return { decks, addDeck, removeDeck, getDeckById }
+  return { decks, addDeck, removeDeck, updateDeck, getDeckById }
 })

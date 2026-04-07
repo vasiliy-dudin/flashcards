@@ -20,19 +20,26 @@ function openDb(): Promise<IDBDatabase> {
   })
 }
 
-function runTransaction<T>(
+async function runTransaction<T>(
   mode: IDBTransactionMode,
   operation: (store: IDBObjectStore) => IDBRequest<T>,
 ): Promise<T> {
-  return openDb().then(
-    (db) =>
-      new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_CARDS, mode)
-        const request = operation(tx.objectStore(STORE_CARDS))
-        request.onsuccess = (event) => resolve((event.target as IDBRequest<T>).result)
-        request.onerror = (event) => reject((event.target as IDBRequest<T>).error)
-      }),
-  )
+  const db = await openDb()
+  return new Promise<T>((resolve, reject) => {
+    const tx = db.transaction(STORE_CARDS, mode)
+    const request = operation(tx.objectStore(STORE_CARDS))
+
+    // Close connection once the transaction fully commits
+    tx.oncomplete = () => db.close()
+    // Reject and close if the transaction is aborted (e.g. storage quota exceeded)
+    tx.onabort = () => {
+      db.close()
+      reject(tx.error ?? new Error('IDB transaction aborted'))
+    }
+
+    request.onsuccess = (event) => resolve((event.target as IDBRequest<T>).result)
+    request.onerror = (event) => reject((event.target as IDBRequest<T>).error)
+  })
 }
 
 export function saveCard(card: Card): Promise<IDBValidKey> {

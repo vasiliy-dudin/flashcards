@@ -24,12 +24,20 @@ function generateFilename(word: string): string {
   return `${slug || 'audio'}-${Date.now()}.mp3`
 }
 
+function isTtsApiResponse(data: unknown): data is TtsApiResponse {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'audioContent' in data &&
+    typeof (data as TtsApiResponse).audioContent === 'string'
+  )
+}
+
 function extractAudioContent(data: unknown): string {
-  const response = data as TtsApiResponse
-  if (typeof response?.audioContent !== 'string') {
+  if (!isTtsApiResponse(data)) {
     throw new Error('Unexpected TTS API response shape')
   }
-  return response.audioContent
+  return data.audioContent
 }
 
 export async function generateAudio(word: string): Promise<TtsResult> {

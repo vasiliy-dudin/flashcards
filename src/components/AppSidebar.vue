@@ -5,6 +5,5 @@
   </nav>
 </template>
 
-<script lang="ts">
-export default { name: 'AppSidebar' }
+<script setup lang="ts">
 </script>

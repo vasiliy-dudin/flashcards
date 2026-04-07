@@ -4,6 +4,5 @@
   </main>
 </template>
 
-<script lang="ts">
-export default { name: 'SettingsView' }
+<script setup lang="ts">
 </script>

@@ -1,7 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 
-const AUDIO_DIR = 'public/audio'
+// Resolved relative to this file so the path is stable regardless of CWD
+const AUDIO_DIR = resolve(import.meta.dirname, '../../public/audio')
 const AUDIO_URL_PREFIX = '/audio'
 
 /** Saves base64-encoded MP3 data to disk and returns its public URL path. */
