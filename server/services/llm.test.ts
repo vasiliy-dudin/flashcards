@@ -51,6 +51,28 @@ describe('GeminiProvider', () => {
     expect(result).toEqual(MOCK_LLM_RESPONSE)
   })
 
+  it('throws when candidates array is empty', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ candidates: [] }),
+    } as Response)
+
+    await expect(new GeminiProvider('test-key').generateExamples(MOCK_WORD)).rejects.toThrow(
+      'Unexpected Gemini API response shape',
+    )
+  })
+
+  it('throws when response has no candidates field', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ error: 'something went wrong' }),
+    } as Response)
+
+    await expect(new GeminiProvider('test-key').generateExamples(MOCK_WORD)).rejects.toThrow(
+      'Unexpected Gemini API response shape',
+    )
+  })
+
   it('throws on non-OK HTTP response', async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: false,
