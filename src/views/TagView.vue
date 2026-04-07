@@ -2,33 +2,11 @@
   <main class="tag-view">
     <header class="tag-view__header">
       <h2 class="tag-view__title">{{ tagName }}</h2>
-      <div class="view-toggle">
-        <button
-          class="view-toggle__btn"
-          :class="{ 'is-active': viewMode === 'grid' }"
-          title="Grid view"
-          @click="uiStore.setViewMode('grid')"
-        >
-          ▦
-        </button>
-        <button
-          class="view-toggle__btn"
-          :class="{ 'is-active': viewMode === 'table' }"
-          title="Table view"
-          @click="uiStore.setViewMode('table')"
-        >
-          ☰
-        </button>
-      </div>
+      <ViewToggle :model-value="viewMode" @update:model-value="uiStore.setViewMode" />
     </header>
 
     <div class="tag-view__filters">
-      <input
-        v-model="searchText"
-        class="search-input"
-        type="search"
-        placeholder="Search cards…"
-      />
+      <SearchInput v-model="searchText" placeholder="Search cards…" />
     </div>
 
     <p class="tag-view__count">
@@ -48,6 +26,8 @@ import { useCardsStore } from '../stores/cards'
 import { useUiStore } from '../stores/ui'
 import CardGrid from '../components/CardGrid.vue'
 import CardTable from '../components/CardTable.vue'
+import ViewToggle from '../components/ViewToggle.vue'
+import SearchInput from '../components/SearchInput.vue'
 
 const route = useRoute()
 const tagName = computed<string>(() => {
@@ -97,51 +77,8 @@ const filteredCards = computed(() => {
   font-weight: var(--font-weight-bold);
 }
 
-.view-toggle {
-  display: flex;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.view-toggle__btn {
-  padding: var(--space-2) var(--space-3);
-  background: transparent;
-  border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  font-size: var(--font-size-base);
-  transition: background-color var(--transition-fast), color var(--transition-fast);
-
-  &:hover {
-    background-color: var(--color-surface-2);
-    color: var(--color-text);
-  }
-
-  &.is-active {
-    background-color: var(--color-surface-2);
-    color: var(--color-primary);
-  }
-}
-
 .tag-view__filters {
   display: flex;
-}
-
-.search-input {
-  max-width: 320px;
-  padding: var(--space-2) var(--space-3);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  outline: none;
-  transition: border-color var(--transition-fast);
-
-  &:focus {
-    border-color: var(--color-primary);
-  }
 }
 
 .tag-view__count {

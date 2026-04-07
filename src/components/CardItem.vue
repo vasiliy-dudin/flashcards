@@ -30,6 +30,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Card } from '../types'
+import { formatDate } from '../utils/formatDate'
+import { getCardDueStatus } from '../utils/cardStatus'
 
 interface DueBadge {
   label: string
@@ -42,18 +44,10 @@ function leafSegment(tagPath: string): string {
   return tagPath.split('/').at(-1) ?? tagPath
 }
 
-function formatDate(dateStr: string): string {
-  const [year, month, day] = dateStr.split('-').map(Number)
-  return new Date(year, month - 1, day).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-  })
-}
-
 const dueBadge = computed<DueBadge>(() => {
-  const today = new Date().toISOString().slice(0, 10)
-  if (card.dueDate < today) return { label: 'Overdue', variant: 'overdue' }
-  if (card.dueDate === today) return { label: 'Due today', variant: 'due' }
+  const status = getCardDueStatus(card.dueDate)
+  if (status === 'overdue') return { label: 'Overdue', variant: 'overdue' }
+  if (status === 'due') return { label: 'Due today', variant: 'due' }
   return { label: formatDate(card.dueDate), variant: 'future' }
 })
 
@@ -150,9 +144,10 @@ function playAudio(): void {
 }
 
 .card-item__audio-btn {
+  --_size: 28px;
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: var(--_size);
+  height: var(--_size);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: transparent;

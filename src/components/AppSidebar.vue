@@ -23,7 +23,7 @@
           <router-link
             :to="`/tag/${encodeURIComponent(node.path)}`"
             class="sidebar__nav-item sidebar__tag-item"
-            :style="{ paddingLeft: `calc(var(--space-4) * ${1 + node.depth})` }"
+            :style="{ paddingLeft: `calc(var(--space-4) * ${BASE_INDENT_LEVELS + node.depth})` }"
           >
             <span>{{ node.label }}</span>
             <span class="sidebar__count">{{ node.cardCount }}</span>
@@ -47,6 +47,8 @@ interface TagTreeNode {
   depth: number
   cardCount: number
 }
+
+const BASE_INDENT_LEVELS = 1
 
 const { decks } = storeToRefs(useDecksStore())
 const { tags } = storeToRefs(useTagsStore())

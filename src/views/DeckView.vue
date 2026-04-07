@@ -3,35 +3,13 @@
     <header class="deck-view__header">
       <h2 class="deck-view__title">{{ deck?.name ?? 'Deck' }}</h2>
       <div class="deck-view__toolbar">
-        <div class="view-toggle">
-          <button
-            class="view-toggle__btn"
-            :class="{ 'is-active': viewMode === 'grid' }"
-            title="Grid view"
-            @click="uiStore.setViewMode('grid')"
-          >
-            ▦
-          </button>
-          <button
-            class="view-toggle__btn"
-            :class="{ 'is-active': viewMode === 'table' }"
-            title="Table view"
-            @click="uiStore.setViewMode('table')"
-          >
-            ☰
-          </button>
-        </div>
+        <ViewToggle :model-value="viewMode" @update:model-value="uiStore.setViewMode" />
         <button class="btn-primary" @click="showAddModal = true">+ Add card</button>
       </div>
     </header>
 
     <div class="deck-view__filters">
-      <input
-        v-model="searchText"
-        class="search-input"
-        type="search"
-        placeholder="Search cards…"
-      />
+      <SearchInput v-model="searchText" placeholder="Search cards…" />
       <div class="tag-filter">
         <button
           class="tag-filter__toggle"
@@ -70,6 +48,8 @@ import { useUiStore } from '../stores/ui'
 import CardGrid from '../components/CardGrid.vue'
 import CardTable from '../components/CardTable.vue'
 import AddCardModal from '../components/AddCardModal.vue'
+import ViewToggle from '../components/ViewToggle.vue'
+import SearchInput from '../components/SearchInput.vue'
 
 const route = useRoute()
 const deckId = computed<string>(() => {
@@ -144,33 +124,6 @@ const filteredCards = computed(() =>
   gap: var(--space-3);
 }
 
-.view-toggle {
-  display: flex;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.view-toggle__btn {
-  padding: var(--space-2) var(--space-3);
-  background: transparent;
-  border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  font-size: var(--font-size-base);
-  transition: background-color var(--transition-fast), color var(--transition-fast);
-
-  &:hover {
-    background-color: var(--color-surface-2);
-    color: var(--color-text);
-  }
-
-  &.is-active {
-    background-color: var(--color-surface-2);
-    color: var(--color-primary);
-  }
-}
-
 .btn-primary {
   padding: var(--space-2) var(--space-4);
   background-color: var(--color-primary);
@@ -191,23 +144,6 @@ const filteredCards = computed(() =>
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
-}
-
-.search-input {
-  flex: 1;
-  max-width: 320px;
-  padding: var(--space-2) var(--space-3);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  outline: none;
-  transition: border-color var(--transition-fast);
-
-  &:focus {
-    border-color: var(--color-primary);
-  }
 }
 
 .tag-filter {

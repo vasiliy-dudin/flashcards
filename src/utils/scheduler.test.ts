@@ -4,7 +4,7 @@ import {
   MAX_INTERVAL_DAYS,
   REMEMBER_MULTIPLIER,
   scheduleCard,
-} from './useScheduler'
+} from './scheduler'
 import type { Card } from '../types'
 
 const BASE_CARD: Card = {

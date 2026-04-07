@@ -73,6 +73,34 @@ interface AudioResponse {
   audioUrl?: string
 }
 
+function isExamplesResponse(value: unknown): value is ExamplesResponse {
+  return typeof value === 'object' && value !== null
+}
+
+function isAudioResponse(value: unknown): value is AudioResponse {
+  return typeof value === 'object' && value !== null
+}
+
+/** Fetches audio URL; returns null on any failure (degraded mode). */
+async function fetchAudio(term: string): Promise<string | null> {
+  try {
+    const res = await fetch('/api/generate-audio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ word: term }),
+    })
+    if (!res.ok) {
+      console.warn('[AddCardModal] Audio generation unavailable for:', term)
+      return null
+    }
+    const raw: unknown = await res.json()
+    return isAudioResponse(raw) ? (raw.audioUrl ?? null) : null
+  } catch (err) {
+    console.warn('[AddCardModal] Audio fetch failed:', term, err)
+    return null
+  }
+}
+
 async function handleSubmit(): Promise<void> {
   const trimmed = word.value.trim()
   if (!trimmed) return
@@ -81,25 +109,23 @@ async function handleSubmit(): Promise<void> {
   error.value = ''
 
   try {
-    const [examplesRes, audioRes] = await Promise.all([
-      fetch('/api/generate-examples', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ word: trimmed }),
-      }),
-      fetch('/api/generate-audio', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ word: trimmed }),
-      }),
-    ])
+    const examplesRes = await fetch('/api/generate-examples', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ word: trimmed }),
+    })
 
-    if (!examplesRes.ok || !audioRes.ok) {
-      throw new Error('Generation service is unavailable. Please try again later.')
+    if (!examplesRes.ok) {
+      throw new Error('Content generation is unavailable. Please try again later.')
     }
 
-    const examples: ExamplesResponse = await examplesRes.json()
-    const audio: AudioResponse = await audioRes.json()
+    const rawExamples: unknown = await examplesRes.json()
+    if (!isExamplesResponse(rawExamples)) {
+      throw new Error('Unexpected response from content generation service.')
+    }
+    const examples = rawExamples
+    // Audio is optional — failure produces a card without audio (graceful degradation)
+    const audioUrl = await fetchAudio(trimmed)
 
     const today = new Date().toISOString().slice(0, 10)
     const card: Card = {
@@ -108,7 +134,7 @@ async function handleSubmit(): Promise<void> {
       definition: examples.definition ?? '',
       examples: examples.examples ?? [],
       usageNotes: examples.usageNotes ?? '',
-      audioUrl: audio.audioUrl ?? null,
+      audioUrl,
       deckId: props.deckId,
       tags: [],
       interval: 1,
@@ -118,7 +144,14 @@ async function handleSubmit(): Promise<void> {
 
     cardsStore.addCard(card)
     await saveCard(card)
-    close()
+
+    if (audioUrl === null) {
+      // Card saved — keep modal open so user sees the degradation notice
+      word.value = ''
+      error.value = 'Card saved without audio (audio service unavailable).'
+    } else {
+      close()
+    }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Something went wrong.'
     console.error('[AddCardModal] Card creation failed:', trimmed, err)
@@ -133,7 +166,7 @@ async function handleSubmit(): Promise<void> {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;

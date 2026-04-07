@@ -7,6 +7,8 @@
       </span>
     </header>
 
+    <p v-if="persistError" class="inbox__persist-error">{{ persistError }}</p>
+
     <div v-if="!currentCard" class="inbox__empty">
       <p class="inbox__empty-text">All done for today!</p>
       <p class="inbox__empty-sub">Come back tomorrow for more cards.</p>
@@ -47,7 +49,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useCardsStore } from '../stores/cards'
-import { scheduleCard, type ReviewResult } from '../composables/useScheduler'
+import { scheduleCard, type ReviewResult } from '../utils/scheduler'
 import { saveCard } from '../db/index'
 import type { Card } from '../types'
 
@@ -56,6 +58,7 @@ const cardsStore = useCardsStore()
 const queue = ref<Card[]>([])
 const totalCount = ref(0)
 const isFlipped = ref(false)
+const persistError = ref('')
 
 const currentCard = computed<Card | undefined>(() => queue.value[0])
 const reviewedCount = computed<number>(() => totalCount.value - queue.value.length)
@@ -76,16 +79,17 @@ async function submitReview(result: ReviewResult): Promise<void> {
   const card = queue.value[0]
   if (!card) return
 
+  persistError.value = ''
   const patch = scheduleCard(card, result)
   const updated: Card = { ...card, ...patch }
 
-  cardsStore.updateCard(card.id, patch)
-  queue.value.shift()
-  isFlipped.value = false
-
   try {
     await saveCard(updated)
+    cardsStore.updateCard(card.id, patch)
+    queue.value.shift()
+    isFlipped.value = false
   } catch (err) {
+    persistError.value = 'Could not save your review. Please try again.'
     console.error('[InboxView] Failed to persist card review:', card.id, err)
   }
 }
@@ -145,7 +149,7 @@ async function submitReview(result: ReviewResult): Promise<void> {
 
 .inbox__flipper {
   position: relative;
-  height: 280px;
+  height: var(--card-flip-height);
   transform-style: preserve-3d;
   transition: transform 0.4s ease;
   cursor: pointer;
@@ -216,6 +220,16 @@ async function submitReview(result: ReviewResult): Promise<void> {
 .inbox__hint {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+}
+
+.inbox__persist-error {
+  width: 100%;
+  max-width: 640px;
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  background-color: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
 }
 
 .btn {

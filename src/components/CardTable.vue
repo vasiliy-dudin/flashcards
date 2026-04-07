@@ -37,6 +37,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { Card } from '../types'
+import { formatDate } from '../utils/formatDate'
+import { getCardDueStatus } from '../utils/cardStatus'
 
 type SortKey = 'word' | 'createdAt' | 'dueDate' | 'interval'
 type SortDir = 'asc' | 'desc'
@@ -78,20 +80,8 @@ const sortedCards = computed<Card[]>(() => {
   })
 })
 
-function formatDate(dateStr: string): string {
-  const [year, month, day] = dateStr.slice(0, 10).split('-').map(Number)
-  return new Date(year, month - 1, day).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: '2-digit',
-  })
-}
-
 function dueBadgeClass(dueDate: string): string {
-  const today = new Date().toISOString().slice(0, 10)
-  if (dueDate < today) return 'is-overdue'
-  if (dueDate === today) return 'is-due'
-  return 'is-future'
+  return `is-${getCardDueStatus(dueDate)}`
 }
 </script>
 
