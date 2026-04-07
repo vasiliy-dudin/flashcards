@@ -1,8 +1,8 @@
 <template>
-  <div style="display: flex; height: 100vh;">
-    <AppSidebar />
+  <AppSidebar />
+  <main class="app-main">
     <router-view />
-  </div>
+  </main>
 </template>
 
 <script setup lang="ts">

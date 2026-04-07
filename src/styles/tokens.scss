@@ -52,6 +52,9 @@
   // --- Transitions ---
   --transition-fast:   150ms ease;
   --transition-normal: 250ms ease;
+
+  // --- Layout ---
+  --sidebar-width: 220px;
 }
 
 // SASS variable aliases — usable in component style blocks via @use / @forward.
