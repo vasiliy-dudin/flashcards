@@ -45,10 +45,16 @@ On card creation the server automatically:
       └─ fetch() API calls
             │
             ▼
-      Server (Node.js / Express or serverless)
-      ├─ POST /api/generate-examples   → calls LLM, returns JSON
-      ├─ POST /api/generate-audio      → calls TTS, saves .mp3, returns { audioUrl }
+      Server (Node.js / Hono)
+      ├─ GET/POST/PUT/DELETE /api/cards   → CRUD on cards
+      ├─ GET/POST            /api/decks   → CRUD on decks
+      ├─ GET/POST            /api/tags    → CRUD on tags
+      ├─ POST /api/generate-examples      → calls LLM, returns JSON
+      ├─ POST /api/generate-audio         → calls TTS, saves .mp3, returns { audioUrl }
       └─ static serving of saved audio files
+            │
+            ├─ SQLite (via better-sqlite3 + Drizzle ORM)
+            │   cards / decks / tags tables
             │
             ▼
       External services (API keys live on server only, never in browser)
@@ -56,8 +62,8 @@ On card creation the server automatically:
       └─ TTS  : Google Cloud TTS Neural2 en-GB  (primary, free tier)
                 Azure Neural en-GB-RyanNeural    (fallback)
 
-The frontend has NO TTS or AI modules — it only calls its own backend endpoints.
-Card metadata (including audioUrl) is stored in IndexedDB on the client.
+The frontend has NO TTS, AI, or storage modules — it only calls its own backend endpoints.
+All card data lives in SQLite on the server; accessible from any device on the same instance.
 Audio files are stored on the server filesystem (or object storage).
 
 ***
@@ -70,7 +76,7 @@ Audio files are stored on the server filesystem (or object storage).
 | Build / Dev      | Vite                                               |
 | Tests            | Vitest (integrated with Vite config)               |
 | Package manager  | pnpm — mandatory                                   |
-| Client storage   | IndexedDB                                          |
+| Server storage   | SQLite via better-sqlite3 + Drizzle ORM            |
 | PWA              | Service Worker + Web App Manifest                  |
 | Backend          | Node.js + Hono + @hono/node-server                 |
 | LLM              | REST → Gemini / Claude / OpenAI (env-configurable) |
@@ -102,15 +108,21 @@ show a clear message, do not crash, do not silently skip audio.
       components/                 # Reusable UI: Button, Modal, Sidebar,
       │                           #   CardGrid, CardTable, DeckItem, TagItem…
       views/                      # Route-level: Inbox, Deck, Tag, Settings
-      stores/                     # Pinia stores (cards, decks, tags, ui)
-      db/                         # IndexedDB abstraction
+      stores/                     # Pinia stores (cards, decks, tags, ui) — client cache
       api/                        # Thin fetch wrappers → backend endpoints
       styles/
       main.ts
       App.vue
 
     server/                       # Backend (Node.js)
+      db/
+        schema.ts                 # Drizzle table definitions (cards, decks, tags)
+        index.ts                  # DB connection (better-sqlite3 + Drizzle)
+        seed.ts                   # Dev fixtures inserted into SQLite
       routes/
+        cards.ts                  # GET/POST/PUT/DELETE /api/cards
+        decks.ts                  # GET/POST /api/decks
+        tags.ts                   # GET /api/tags
         generate-examples.ts
         generate-audio.ts
       services/
@@ -190,8 +202,10 @@ When the user submits a new card (word or phrase):
 1. Frontend calls POST /api/generate-examples → receives definition + examples.
 2. Frontend calls POST /api/generate-audio with the word/phrase →
    server generates audio, stores file, returns { audioUrl }.
-3. Card is saved to IndexedDB including audioUrl.
-4. When the card is opened, the stored audio is played directly from audioUrl.
+3. Frontend calls POST /api/cards with the full card payload →
+   server inserts the row into SQLite and returns the saved card.
+4. Pinia store is updated with the returned card (client cache).
+5. When the card is opened, the stored audio is played directly from audioUrl.
 
 ### Import / Export
 
