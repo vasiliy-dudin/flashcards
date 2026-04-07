@@ -71,11 +71,12 @@ function setSort(key: SortKey): void {
 
 const sortedCards = computed<Card[]>(() => {
   return [...cards].sort((a, b) => {
-    const cmp = String(a[sortKey.value]).localeCompare(
-      String(b[sortKey.value]),
-      undefined,
-      { numeric: true },
-    )
+    let cmp: number
+    if (sortKey.value === 'interval') {
+      cmp = a.interval - b.interval
+    } else {
+      cmp = a[sortKey.value].localeCompare(b[sortKey.value])
+    }
     return sortDir.value === 'asc' ? cmp : -cmp
   })
 })

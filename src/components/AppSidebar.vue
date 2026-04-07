@@ -1,5 +1,5 @@
 <template>
-  <nav class="app-sidebar">
+  <nav class="sidebar">
     <section class="sidebar__section">
       <router-link to="/" class="sidebar__nav-item">Inbox</router-link>
     </section>

@@ -1,5 +1,8 @@
 <template>
-  <main class="deck-view">
+  <main v-if="deck === undefined" class="deck-view deck-view--not-found">
+    <p class="deck-view__not-found">Deck not found.</p>
+  </main>
+  <main v-else class="deck-view">
     <header class="deck-view__header">
       <h2 class="deck-view__title">{{ deck?.name ?? 'Deck' }}</h2>
       <div class="deck-view__toolbar">
@@ -171,7 +174,7 @@ const filteredCards = computed(() =>
   position: absolute;
   top: calc(100% + var(--space-1));
   left: 0;
-  z-index: 10;
+  z-index: var(--z-index-dropdown);
   min-width: 200px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -207,5 +210,15 @@ const filteredCards = computed(() =>
 .deck-view__count {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+}
+
+.deck-view--not-found {
+  padding: var(--space-6);
+}
+
+.deck-view__not-found {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-style: italic;
 }
 </style>

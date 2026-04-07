@@ -59,9 +59,16 @@
 
   // --- Overlay ---
   --color-overlay: rgba(0, 0, 0, 0.6);
+
+  // --- Z-index scale ---
+  --z-index-dropdown: 10;
 }
 
-// SASS variable aliases — usable in component style blocks via @use / @forward.
+// SASS variable aliases — these map CSS custom properties to SASS variables so
+// component <style lang="scss"> blocks can reference tokens without string literals.
+// WARNING: these variables resolve to var(--token) strings, not bare values.
+// They cannot be used in SASS arithmetic or interpolation — use the CSS custom
+// properties directly in calc() expressions instead.
 $color-bg:           var(--color-bg);
 $color-surface:      var(--color-surface);
 $color-surface-2:    var(--color-surface-2);
