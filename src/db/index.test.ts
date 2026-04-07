@@ -41,6 +41,15 @@ describe('cards', () => {
     expect(result).toEqual(TEST_CARD)
   })
 
+  it('updates an existing card when saved with the same id (upsert)', async () => {
+    await saveCard(TEST_CARD)
+    const updated: Card = { ...TEST_CARD, word: 'serendipitous', interval: 3 }
+    await saveCard(updated)
+    const all = await getAllCards()
+    expect(all).toHaveLength(1)
+    expect(all[0]).toEqual(updated)
+  })
+
   it('returns undefined for a missing card', async () => {
     const result = await getCard('nonexistent')
     expect(result).toBeUndefined()
