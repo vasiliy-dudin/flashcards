@@ -7,17 +7,7 @@
       </span>
     </header>
 
-    <p v-if="card.dictionary.transcription" class="card-item__transcription">
-      {{ card.dictionary.transcription }}
-    </p>
-
-    <ol v-if="card.dictionary.meanings.length > 0" class="card-item__meanings">
-      <li v-for="meaning in card.dictionary.meanings" :key="meaning">{{ meaning }}</li>
-    </ol>
-
     <p class="card-item__definition">{{ card.definition }}</p>
-
-    <p v-if="card.aiExample" class="card-item__ai-example">{{ card.aiExample }}</p>
 
     <footer class="card-item__footer">
       <div class="card-item__tags">
@@ -123,38 +113,9 @@ function playAudio(): void {
   }
 }
 
-.card-item__transcription {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  font-style: italic;
-}
-
-.card-item__meanings {
-  margin: 0;
-  padding-left: var(--space-4);
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  line-height: var(--line-height-base);
-
-  li + li {
-    margin-top: var(--space-1);
-  }
-}
-
 .card-item__definition {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
-  line-height: var(--line-height-base);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.card-item__ai-example {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  font-style: italic;
   line-height: var(--line-height-base);
   display: -webkit-box;
   -webkit-line-clamp: 2;
