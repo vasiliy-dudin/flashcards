@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import './db/index.js'
 import generateExamples from './routes/generate-examples.js'
 import generateAudio from './routes/generate-audio.js'
 
