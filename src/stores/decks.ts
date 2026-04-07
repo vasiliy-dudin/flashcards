@@ -20,9 +20,13 @@ export const useDecksStore = defineStore('decks', () => {
     }
   }
 
+  function setDecks(next: Deck[]): void {
+    decks.value = next
+  }
+
   function getDeckById(id: string): Deck | undefined {
     return decks.value.find((d) => d.id === id)
   }
 
-  return { decks, addDeck, removeDeck, updateDeck, getDeckById }
+  return { decks, setDecks, addDeck, removeDeck, updateDeck, getDeckById }
 })

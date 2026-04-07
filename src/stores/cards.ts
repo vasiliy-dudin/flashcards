@@ -20,9 +20,13 @@ export const useCardsStore = defineStore('cards', () => {
     }
   }
 
+  function setCards(next: Card[]): void {
+    cards.value = next
+  }
+
   function getCardById(id: string): Card | undefined {
     return cards.value.find((c) => c.id === id)
   }
 
-  return { cards, addCard, removeCard, updateCard, getCardById }
+  return { cards, setCards, addCard, removeCard, updateCard, getCardById }
 })
