@@ -25,3 +25,8 @@ export async function updateCard(id: string, patch: Partial<Card>): Promise<Card
   if (!res.ok) throw new Error(`Failed to update card ${id}: ${res.status}`)
   return res.json() as Promise<Card>
 }
+
+export async function deleteCard(id: string): Promise<void> {
+  const res = await fetch(`/api/cards/${id}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error(`Failed to delete card ${id}: ${res.status}`)
+}

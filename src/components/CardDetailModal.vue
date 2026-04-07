@@ -54,7 +54,19 @@
           >
             ▶ Play
           </button>
-          <button class="card-detail__edit-btn" @click="showEditModal = true">Edit</button>
+          <div class="card-detail__actions">
+            <template v-if="!showDeleteConfirm">
+              <button class="card-detail__edit-btn" @click="showEditModal = true">Edit</button>
+              <button class="card-detail__delete-btn" @click="showDeleteConfirm = true">Delete</button>
+            </template>
+            <template v-else>
+              <span class="card-detail__confirm-text">Delete this card?</span>
+              <button class="card-detail__confirm-cancel" @click="showDeleteConfirm = false">Cancel</button>
+              <button class="card-detail__confirm-delete" :disabled="isDeleting" @click="handleDelete">
+                {{ isDeleting ? 'Deleting…' : 'Confirm' }}
+              </button>
+            </template>
+          </div>
         </footer>
 
         <CardEditModal
@@ -73,6 +85,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import type { Card } from '../types'
 import { formatDate } from '../utils/formatDate'
 import CardEditModal from './CardEditModal.vue'
+import { deleteCard as deleteCardApi } from '../api/cards'
+import { useCardsStore } from '../stores/cards'
+import { useTagsStore } from '../stores/tags'
 
 const props = defineProps<{ modelValue: boolean; card: Card }>()
 const emit = defineEmits<{
@@ -80,7 +95,12 @@ const emit = defineEmits<{
   'card-updated': [card: Card]
 }>()
 
+const cardsStore = useCardsStore()
+const tagsStore = useTagsStore()
+
 const showEditModal = ref(false)
+const showDeleteConfirm = ref(false)
+const isDeleting = ref(false)
 
 function close(): void {
   emit('update:modelValue', false)
@@ -102,6 +122,20 @@ function playAudio(): void {
   new Audio(props.card.audioUrl).play().catch(err => {
     console.error('[CardDetailModal] Audio playback failed:', props.card.word, err)
   })
+}
+
+async function handleDelete(): Promise<void> {
+  isDeleting.value = true
+  try {
+    await deleteCardApi(props.card.id)
+    props.card.tags.forEach(tag => tagsStore.decrementTag(tag))
+    cardsStore.removeCard(props.card.id)
+    close()
+  } catch (err) {
+    console.error('[CardDetailModal] Delete failed:', props.card.id, err)
+  } finally {
+    isDeleting.value = false
+  }
 }
 
 function onCardSaved(updated: Card): void {
@@ -244,8 +278,45 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
   color: var(--color-text-muted);
 }
 
-.card-detail__edit-btn {
+.card-detail__actions {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.card-detail__confirm-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.card-detail__confirm-cancel,
+.card-detail__confirm-delete,
+.card-detail__delete-btn {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.card-detail__confirm-cancel {
+  background-color: var(--color-surface-2);
+  color: var(--color-text-muted);
+  &:hover:not(:disabled) { filter: brightness(1.2); }
+}
+
+.card-detail__delete-btn,
+.card-detail__confirm-delete {
+  background-color: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  color: var(--color-danger);
+  border-color: transparent;
+  &:hover:not(:disabled) { border-color: var(--color-danger); }
+}
+
+.card-detail__edit-btn {
   padding: var(--space-2) var(--space-3);
   background-color: var(--color-surface-2);
   border: 1px solid var(--color-border);
