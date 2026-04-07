@@ -72,7 +72,7 @@ Audio files are stored on the server filesystem (or object storage).
 | Package manager  | pnpm — mandatory                                   |
 | Client storage   | IndexedDB                                          |
 | PWA              | Service Worker + Web App Manifest                  |
-| Backend          | Node.js + Express (or serverless)                  |
+| Backend          | Node.js + Hono + @hono/node-server                 |
 | LLM              | REST → Gemini / Claude / OpenAI (env-configurable) |
 | TTS              | Google Cloud TTS Neural2 en-GB (primary)           |
 | Language         | TypeScript                                         |

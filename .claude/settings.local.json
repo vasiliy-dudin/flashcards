@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(pnpm info:*)",
-      "Bash(pnpm approve-builds:*)"
+      "Bash(pnpm approve-builds:*)",
+      "Bash(npx kill-port:*)",
+      "Bash(netstat -ano)",
+      "Read(//c/Users/dudin/DevProjects/flashcards/**)",
+      "Bash(xargs taskkill:*)"
     ]
   }
 }
