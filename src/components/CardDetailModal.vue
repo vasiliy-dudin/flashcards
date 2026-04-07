@@ -8,17 +8,6 @@
         </header>
 
         <div class="card-detail__body">
-          <p v-if="card.dictionary.transcription" class="card-detail__transcription">
-            {{ card.dictionary.transcription }}
-          </p>
-
-          <section v-if="card.dictionary.meanings.length > 0" class="card-detail__section">
-            <h3 class="card-detail__section-title">Dictionary</h3>
-            <ol class="card-detail__meanings">
-              <li v-for="meaning in card.dictionary.meanings" :key="meaning">{{ meaning }}</li>
-            </ol>
-          </section>
-
           <section class="card-detail__section">
             <h3 class="card-detail__section-title">Translation</h3>
             <p class="card-detail__text">{{ card.definition }}</p>
@@ -31,6 +20,21 @@
             </ul>
           </section>
 
+          <div v-if="card.tags.length > 0" class="card-detail__tags">
+            <span v-for="tag in card.tags" :key="tag" class="card-detail__tag">{{ tag }}</span>
+          </div>
+
+          <p v-if="card.dictionary.transcription" class="card-detail__transcription">
+            {{ card.dictionary.transcription }}
+          </p>
+
+          <section v-if="card.dictionary.meanings.length > 0" class="card-detail__section">
+            <h3 class="card-detail__section-title">Dictionary</h3>
+            <ol class="card-detail__meanings">
+              <li v-for="meaning in card.dictionary.meanings" :key="meaning">{{ meaning }}</li>
+            </ol>
+          </section>
+
           <section v-if="card.aiExample" class="card-detail__section">
             <h3 class="card-detail__section-title">AI Example</h3>
             <p class="card-detail__ai-example">{{ card.aiExample }}</p>
@@ -38,9 +42,6 @@
         </div>
 
         <footer class="card-detail__footer">
-          <div class="card-detail__tags">
-            <span v-for="tag in card.tags" :key="tag" class="card-detail__tag">{{ tag }}</span>
-          </div>
           <div class="card-detail__meta">
             <span>Due: {{ formatDate(card.dueDate) }}</span>
             <span>Interval: {{ card.interval }}d</span>
@@ -207,7 +208,6 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
-  flex: 1;
 }
 
 .card-detail__tag {
