@@ -16,8 +16,13 @@
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3", "esbuild", "@parcel/watcher"]
+  },
   "dependencies": {
     "@hono/node-server": "^1.19.12",
+    "better-sqlite3": "^12.8.0",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.12.11",
     "pinia": "^3.0.4",
     "vite": "^8.0.5",
@@ -26,8 +31,10 @@
     "vue-router": "^5.0.4"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.5.2",
     "@vitejs/plugin-vue": "^6.0.5",
+    "drizzle-kit": "^0.31.10",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^29.0.1",
     "sass": "^1.99.0",
