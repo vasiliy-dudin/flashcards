@@ -6,7 +6,9 @@ export const cards = sqliteTable('cards', {
   definition:  text('definition').notNull(),
   /** JSON-encoded string[] */
   examples:    text('examples', { mode: 'json' }).$type<string[]>().notNull(),
-  usageNotes:  text('usage_notes').notNull(),
+  /** JSON-encoded DictionaryEntry { transcription, meanings } */
+  dictionary:  text('dictionary', { mode: 'json' }).$type<{ transcription: string; meanings: string[] }>().notNull(),
+  aiExample:   text('ai_example').notNull(),
   audioUrl:    text('audio_url'),
   deckId:      text('deck_id').notNull(),
   /** JSON-encoded string[] */

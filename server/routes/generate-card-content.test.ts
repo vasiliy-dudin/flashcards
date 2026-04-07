@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import app from './generate-examples.js'
+import app from './generate-card-content.js'
 
 vi.mock('../services/llm.js', () => ({
   createLlmProvider: vi.fn(),
@@ -9,12 +9,14 @@ vi.mock('../services/llm.js', () => ({
 import { createLlmProvider } from '../services/llm.js'
 
 const MOCK_RESULT = {
-  definition: 'Lasting for a very short time.',
-  examples: ['Social media trends are ephemeral.'],
-  usageNotes: 'Formal register.',
+  dictionary: {
+    transcription: '/ɪˈfem.ər.əl/',
+    meanings: ['Lasting for a very short time.', 'Transitory; short-lived.'],
+  },
+  aiExample: 'Social media trends are ephemeral by nature.',
 }
 
-describe('POST /api/generate-examples', () => {
+describe('POST /api/generate-card-content', () => {
   afterEach(() => {
     vi.clearAllMocks()
   })
@@ -56,7 +58,7 @@ describe('POST /api/generate-examples', () => {
 
   it('returns 200 with LlmResponse on success', async () => {
     vi.mocked(createLlmProvider).mockReturnValue({
-      generateExamples: vi.fn().mockResolvedValue(MOCK_RESULT),
+      generateCardContent: vi.fn().mockResolvedValue(MOCK_RESULT),
     })
 
     const res = await app.request('/', {
@@ -68,9 +70,9 @@ describe('POST /api/generate-examples', () => {
     expect(await res.json()).toEqual(MOCK_RESULT)
   })
 
-  it('returns 503 when generateExamples rejects (network error)', async () => {
+  it('returns 503 when generateCardContent rejects (network error)', async () => {
     vi.mocked(createLlmProvider).mockReturnValue({
-      generateExamples: vi.fn().mockRejectedValue(new Error('Network timeout')),
+      generateCardContent: vi.fn().mockRejectedValue(new Error('Network timeout')),
     })
 
     const res = await app.request('/', {

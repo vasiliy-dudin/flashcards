@@ -6,7 +6,7 @@ import { cards } from '../db/schema.js'
 type CardInsert = typeof cards.$inferInsert
 
 const REQUIRED_FIELDS = [
-  'id', 'word', 'definition', 'examples', 'usageNotes',
+  'id', 'word', 'definition', 'examples', 'dictionary', 'aiExample',
   'deckId', 'tags', 'interval', 'dueDate', 'createdAt',
 ] as const
 

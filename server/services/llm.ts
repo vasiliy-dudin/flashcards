@@ -2,13 +2,12 @@ const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models
 const GEMINI_MODEL = 'gemini-2.0-flash'
 
 export interface LlmResponse {
-  definition: string
-  examples: string[]
-  usageNotes: string
+  dictionary: { transcription: string; meanings: string[] }
+  aiExample: string
 }
 
 export interface LlmProvider {
-  generateExamples(word: string): Promise<LlmResponse>
+  generateCardContent(word: string): Promise<LlmResponse>
 }
 
 interface GeminiApiResponse {
@@ -18,18 +17,25 @@ interface GeminiApiResponse {
 const RESPONSE_SCHEMA = {
   type: 'object',
   properties: {
-    definition: { type: 'string' },
-    examples: { type: 'array', items: { type: 'string' } },
-    usageNotes: { type: 'string' },
+    dictionary: {
+      type: 'object',
+      properties: {
+        transcription: { type: 'string' },
+        meanings: { type: 'array', items: { type: 'string' } },
+      },
+      required: ['transcription', 'meanings'],
+    },
+    aiExample: { type: 'string' },
   },
-  required: ['definition', 'examples', 'usageNotes'],
+  required: ['dictionary', 'aiExample'],
 }
 
 function buildPrompt(word: string): string {
   return (
-    `You are an English vocabulary teacher. For the word or phrase "${word}", provide ` +
-    `a clear definition, three example sentences, and brief usage notes (register, ` +
-    `collocations, common mistakes). Use British English.`
+    `You are a British English dictionary. For the word or phrase "${word}", return:\n` +
+    `1. "dictionary": IPA transcription and the 2-4 most common meanings as short numbered phrases.\n` +
+    `2. "aiExample": one natural example sentence in British English.\n` +
+    `Keep meanings concise (under 10 words each). Use British English spelling.`
   )
 }
 
@@ -59,7 +65,7 @@ export class GeminiProvider implements LlmProvider {
     this.model = model
   }
 
-  async generateExamples(word: string): Promise<LlmResponse> {
+  async generateCardContent(word: string): Promise<LlmResponse> {
     const url = `${GEMINI_ENDPOINT}/${this.model}:generateContent`
     const response = await fetch(url, {
       method: 'POST',

@@ -5,9 +5,11 @@ import { GeminiProvider } from './llm.js'
 const MOCK_WORD = 'serendipity'
 
 const MOCK_LLM_RESPONSE = {
-  definition: 'The occurrence of happy events by chance.',
-  examples: ['It was pure serendipity that we met.'],
-  usageNotes: 'Formal register, typically used in written English.',
+  dictionary: {
+    transcription: '/ˌser.ənˈdɪp.ɪ.ti/',
+    meanings: ['The occurrence of happy events by chance.', 'A fortunate discovery made accidentally.'],
+  },
+  aiExample: 'It was pure serendipity that we met at the conference.',
 }
 
 const MOCK_GEMINI_RESPONSE = {
@@ -29,7 +31,7 @@ describe('GeminiProvider', () => {
       json: async () => MOCK_GEMINI_RESPONSE,
     } as Response)
 
-    await new GeminiProvider('test-key').generateExamples(MOCK_WORD)
+    await new GeminiProvider('test-key').generateCardContent(MOCK_WORD)
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('gemini-2.0-flash:generateContent'),
@@ -46,7 +48,7 @@ describe('GeminiProvider', () => {
       json: async () => MOCK_GEMINI_RESPONSE,
     } as Response)
 
-    const result = await new GeminiProvider('test-key').generateExamples(MOCK_WORD)
+    const result = await new GeminiProvider('test-key').generateCardContent(MOCK_WORD)
 
     expect(result).toEqual(MOCK_LLM_RESPONSE)
   })
@@ -57,7 +59,7 @@ describe('GeminiProvider', () => {
       json: async () => ({ candidates: [] }),
     } as Response)
 
-    await expect(new GeminiProvider('test-key').generateExamples(MOCK_WORD)).rejects.toThrow(
+    await expect(new GeminiProvider('test-key').generateCardContent(MOCK_WORD)).rejects.toThrow(
       'Unexpected Gemini API response shape',
     )
   })
@@ -68,7 +70,7 @@ describe('GeminiProvider', () => {
       json: async () => ({ error: 'something went wrong' }),
     } as Response)
 
-    await expect(new GeminiProvider('test-key').generateExamples(MOCK_WORD)).rejects.toThrow(
+    await expect(new GeminiProvider('test-key').generateCardContent(MOCK_WORD)).rejects.toThrow(
       'Unexpected Gemini API response shape',
     )
   })
@@ -80,7 +82,7 @@ describe('GeminiProvider', () => {
       statusText: 'Too Many Requests',
     } as Response)
 
-    await expect(new GeminiProvider('test-key').generateExamples(MOCK_WORD)).rejects.toThrow(
+    await expect(new GeminiProvider('test-key').generateCardContent(MOCK_WORD)).rejects.toThrow(
       'Gemini API error: 429',
     )
   })

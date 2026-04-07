@@ -6,7 +6,7 @@ import { seedDevData } from './db/seed.js'
 import cardsRoute from './routes/cards.js'
 import decksRoute from './routes/decks.js'
 import tagsRoute from './routes/tags.js'
-import generateExamples from './routes/generate-examples.js'
+import generateCardContent from './routes/generate-card-content.js'
 import generateAudio from './routes/generate-audio.js'
 
 const PORT = 3000
@@ -19,7 +19,7 @@ app.use(cors())
 app.route('/api/cards', cardsRoute)
 app.route('/api/decks', decksRoute)
 app.route('/api/tags', tagsRoute)
-app.route('/api/generate-examples', generateExamples)
+app.route('/api/generate-card-content', generateCardContent)
 app.route('/api/generate-audio', generateAudio)
 
 if (process.env.NODE_ENV !== 'production') {

@@ -1,9 +1,15 @@
+export interface DictionaryEntry {
+  transcription: string
+  meanings: string[]
+}
+
 export interface Card {
   id: string
   word: string
   definition: string
   examples: string[]
-  usageNotes: string
+  dictionary: DictionaryEntry
+  aiExample: string
   audioUrl: string | null
   deckId: string
   /** Full tag paths, e.g. ["grammar/tense/past", "phrasal-verbs"] */

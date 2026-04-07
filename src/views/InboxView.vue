@@ -30,8 +30,8 @@
             <ul v-if="currentCard.examples.length > 0" class="inbox__examples">
               <li v-for="example in currentCard.examples" :key="example">{{ example }}</li>
             </ul>
-            <p v-if="currentCard.usageNotes" class="inbox__notes">
-              {{ currentCard.usageNotes }}
+            <p v-if="currentCard.aiExample" class="inbox__notes">
+              {{ currentCard.aiExample }}
             </p>
           </div>
         </div>

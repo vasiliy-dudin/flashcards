@@ -20,11 +20,11 @@ app.post('/', async (c) => {
 
   try {
     const provider = createLlmProvider()
-    const result = await provider.generateExamples(word)
+    const result = await provider.generateCardContent(word)
     return c.json(result)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Content generation failed'
-    console.error('[generate-examples] Error:', message)
+    console.error('[generate-card-content] Error:', message)
     return c.json({ error: message }, 503)
   }
 })
