@@ -5,8 +5,17 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import { router } from './router/index'
 
-const app = createApp(App)
+async function bootstrap(): Promise<void> {
+  const app = createApp(App)
+  app.use(createPinia())
+  app.use(router)
 
-app.use(createPinia())
-app.use(router)
-app.mount('#app')
+  if (import.meta.env.DEV) {
+    const { seedDevData } = await import('./dev/seed')
+    seedDevData()
+  }
+
+  app.mount('#app')
+}
+
+bootstrap().catch(err => console.error('[main] Bootstrap failed:', err))
