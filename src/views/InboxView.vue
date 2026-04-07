@@ -50,8 +50,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useCardsStore } from '../stores/cards'
 import { scheduleCard, type ReviewResult } from '../utils/scheduler'
-import { saveCard } from '../db/index'
-import type { Card } from '../types'
+import { updateCard as updateCardApi } from '../api/cards'
 
 const cardsStore = useCardsStore()
 
@@ -81,10 +80,9 @@ async function submitReview(result: ReviewResult): Promise<void> {
 
   persistError.value = ''
   const patch = scheduleCard(card, result)
-  const updated: Card = { ...card, ...patch }
 
   try {
-    await saveCard(updated)
+    await updateCardApi(card.id, patch)
     cardsStore.updateCard(card.id, patch)
     queue.value.shift()
     isFlipped.value = false
