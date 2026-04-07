@@ -21,6 +21,45 @@
             />
           </label>
 
+          <label class="modal__label">
+            Tags
+            <TagsInput v-model="tags" :disabled="isLoading" />
+            <span class="modal__hint">Enter or comma to confirm each tag</span>
+          </label>
+
+          <button
+            type="button"
+            class="modal__toggle"
+            :disabled="isLoading"
+            @click="showManual = !showManual"
+          >
+            {{ showManual ? '▲ Hide manual fields' : '▼ Fill in manually (skip AI)' }}
+          </button>
+
+          <template v-if="showManual">
+            <label class="modal__label">
+              Definition
+              <textarea
+                v-model="manualDefinition"
+                class="modal__input modal__input--textarea"
+                placeholder="Enter a definition…"
+                rows="3"
+                :disabled="isLoading"
+              />
+            </label>
+
+            <label class="modal__label">
+              Examples <span class="modal__hint">(one per line)</span>
+              <textarea
+                v-model="manualExamples"
+                class="modal__input modal__input--textarea"
+                placeholder="She kept meticulous records.&#10;It was an ephemeral moment."
+                rows="3"
+                :disabled="isLoading"
+              />
+            </label>
+          </template>
+
           <p v-if="error" class="modal__error">{{ error }}</p>
 
           <div class="modal__footer">
@@ -32,7 +71,7 @@
               class="modal__btn modal__btn--submit"
               :disabled="isLoading || !word.trim()"
             >
-              {{ isLoading ? 'Generating…' : 'Add card' }}
+              {{ isLoading ? 'Saving…' : 'Add card' }}
             </button>
           </div>
         </form>
@@ -44,44 +83,67 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useCardsStore } from '../stores/cards'
-import { saveCard } from '../db/index'
+import { useTagsStore } from '../stores/tags'
+import { createCard } from '../api/cards'
 import type { Card } from '../types'
+import TagsInput from './TagsInput.vue'
 
 const props = defineProps<{ modelValue: boolean; deckId: string }>()
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
 
 const cardsStore = useCardsStore()
+const tagsStore = useTagsStore()
 
 const word = ref('')
+const tags = ref<string[]>([])
+const showManual = ref(false)
+const manualDefinition = ref('')
+const manualExamples = ref('')
 const isLoading = ref(false)
 const error = ref('')
 
 function close(): void {
   if (isLoading.value) return
   word.value = ''
+  tags.value = []
+  showManual.value = false
+  manualDefinition.value = ''
+  manualExamples.value = ''
   error.value = ''
   emit('update:modelValue', false)
 }
 
-interface ExamplesResponse {
-  definition?: string
-  examples?: string[]
-  usageNotes?: string
+interface ExamplesResponse { definition?: string; examples?: string[]; usageNotes?: string }
+interface AudioResponse { audioUrl?: string }
+
+function isExamplesResponse(v: unknown): v is ExamplesResponse {
+  return typeof v === 'object' && v !== null
+}
+function isAudioResponse(v: unknown): v is AudioResponse {
+  return typeof v === 'object' && v !== null
 }
 
-interface AudioResponse {
-  audioUrl?: string
+interface ExamplesData { definition: string; examples: string[]; usageNotes: string }
+
+function getManualData(): ExamplesData | null {
+  const definition = manualDefinition.value.trim()
+  if (!definition) return null
+  const examples = manualExamples.value.split('\n').map(s => s.trim()).filter(Boolean)
+  return { definition, examples, usageNotes: '' }
 }
 
-function isExamplesResponse(value: unknown): value is ExamplesResponse {
-  return typeof value === 'object' && value !== null
+async function fetchGeneratedData(term: string): Promise<ExamplesData> {
+  const res = await fetch('/api/generate-examples', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ word: term }),
+  })
+  if (!res.ok) throw new Error('Content generation is unavailable. Please try again later.')
+  const raw: unknown = await res.json()
+  if (!isExamplesResponse(raw)) throw new Error('Unexpected response from content generation service.')
+  return { definition: raw.definition ?? '', examples: raw.examples ?? [], usageNotes: raw.usageNotes ?? '' }
 }
 
-function isAudioResponse(value: unknown): value is AudioResponse {
-  return typeof value === 'object' && value !== null
-}
-
-/** Fetches audio URL; returns null on any failure (degraded mode). */
 async function fetchAudio(term: string): Promise<string | null> {
   try {
     const res = await fetch('/api/generate-audio', {
@@ -89,14 +151,10 @@ async function fetchAudio(term: string): Promise<string | null> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ word: term }),
     })
-    if (!res.ok) {
-      console.warn('[AddCardModal] Audio generation unavailable for:', term)
-      return null
-    }
+    if (!res.ok) return null
     const raw: unknown = await res.json()
     return isAudioResponse(raw) ? (raw.audioUrl ?? null) : null
-  } catch (err) {
-    console.warn('[AddCardModal] Audio fetch failed:', term, err)
+  } catch {
     return null
   }
 }
@@ -104,54 +162,21 @@ async function fetchAudio(term: string): Promise<string | null> {
 async function handleSubmit(): Promise<void> {
   const trimmed = word.value.trim()
   if (!trimmed) return
-
   isLoading.value = true
   error.value = ''
-
   try {
-    const examplesRes = await fetch('/api/generate-examples', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ word: trimmed }),
-    })
-
-    if (!examplesRes.ok) {
-      throw new Error('Content generation is unavailable. Please try again later.')
-    }
-
-    const rawExamples: unknown = await examplesRes.json()
-    if (!isExamplesResponse(rawExamples)) {
-      throw new Error('Unexpected response from content generation service.')
-    }
-    const examples = rawExamples
-    // Audio is optional — failure produces a card without audio (graceful degradation)
+    const data = getManualData() ?? await fetchGeneratedData(trimmed)
     const audioUrl = await fetchAudio(trimmed)
-
     const today = new Date().toISOString().slice(0, 10)
     const card: Card = {
-      id: crypto.randomUUID(),
-      word: trimmed,
-      definition: examples.definition ?? '',
-      examples: examples.examples ?? [],
-      usageNotes: examples.usageNotes ?? '',
-      audioUrl,
-      deckId: props.deckId,
-      tags: [],
-      interval: 1,
-      dueDate: today,
-      createdAt: today,
+      id: crypto.randomUUID(), word: trimmed, ...data,
+      audioUrl, deckId: props.deckId, tags: tags.value,
+      interval: 1, dueDate: today, createdAt: today,
     }
-
-    cardsStore.addCard(card)
-    await saveCard(card)
-
-    if (audioUrl === null) {
-      // Card saved — keep modal open so user sees the degradation notice
-      word.value = ''
-      error.value = 'Card saved without audio (audio service unavailable).'
-    } else {
-      close()
-    }
+    const saved = await createCard(card)
+    cardsStore.addCard(saved)
+    tags.value.forEach(tag => tagsStore.upsertTag(tag))
+    close()
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Something went wrong.'
     console.error('[AddCardModal] Card creation failed:', trimmed, err)
@@ -180,6 +205,8 @@ async function handleSubmit(): Promise<void> {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal__header {
@@ -204,10 +231,7 @@ async function handleSubmit(): Promise<void> {
   padding: var(--space-1);
   border-radius: var(--radius-sm);
   transition: color var(--transition-fast);
-
-  &:hover {
-    color: var(--color-text);
-  }
+  &:hover { color: var(--color-text); }
 }
 
 .modal__body {
@@ -226,8 +250,15 @@ async function handleSubmit(): Promise<void> {
   color: var(--color-text-muted);
 }
 
+.modal__hint {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
 .modal__input {
-  padding: var(--space-3) var(--space-3);
+  padding: var(--space-3);
   background-color: var(--color-surface-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -235,14 +266,26 @@ async function handleSubmit(): Promise<void> {
   font-size: var(--font-size-base);
   outline: none;
   transition: border-color var(--transition-fast);
+  &:focus { border-color: var(--color-primary); }
+  &:disabled { opacity: 0.5; }
+}
 
-  &:focus {
-    border-color: var(--color-primary);
-  }
+.modal__input--textarea {
+  resize: vertical;
+  font-family: inherit;
+  line-height: var(--line-height-base);
+}
 
-  &:disabled {
-    opacity: 0.5;
-  }
+.modal__toggle {
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  &:hover { text-decoration: underline; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 
 .modal__error {
@@ -267,28 +310,16 @@ async function handleSubmit(): Promise<void> {
   cursor: pointer;
   border: none;
   transition: filter var(--transition-fast), opacity var(--transition-fast);
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
   &--cancel {
     background-color: var(--color-surface-2);
     color: var(--color-text-muted);
-
-    &:hover:not(:disabled) {
-      filter: brightness(1.2);
-    }
+    &:hover:not(:disabled) { filter: brightness(1.2); }
   }
-
   &--submit {
     background-color: var(--color-primary);
     color: #fff;
-
-    &:hover:not(:disabled) {
-      filter: brightness(1.1);
-    }
+    &:hover:not(:disabled) { filter: brightness(1.1); }
   }
 }
 </style>
