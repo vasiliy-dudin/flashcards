@@ -1,0 +1,101 @@
+// Design tokens exposed as CSS custom properties.
+// SASS variables are aliases for use in component <style lang="scss"> blocks.
+
+:root {
+  // --- Color palette ---
+  --color-bg:           #0f1117;
+  --color-surface:      #1a1d27;
+  --color-surface-2:    #22263a;
+  --color-border:       #2e3350;
+  --color-text:         #e8eaf6;
+  --color-text-muted:   #8b90b8;
+  --color-primary:      #6c8eff;
+  --color-primary-hover:#8aa4ff;
+  --color-success:      #4caf7d;
+  --color-warning:      #f0b429;
+  --color-danger:       #e05c5c;
+
+  // --- Spacing scale (4px base) ---
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  24px;
+  --space-6:  32px;
+  --space-7:  48px;
+  --space-8:  64px;
+
+  // --- Typography ---
+  --font-family:        'Inter', system-ui, sans-serif;
+  --font-size-xs:       11px;
+  --font-size-sm:       13px;
+  --font-size-base:     15px;
+  --font-size-lg:       18px;
+  --font-size-xl:       22px;
+  --font-size-2xl:      28px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold:   700;
+  --line-height-tight:  1.3;
+  --line-height-base:   1.6;
+
+  // --- Shape ---
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-full: 9999px;
+
+  // --- Shadows ---
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+  // --- Transitions ---
+  --transition-fast:   150ms ease;
+  --transition-normal: 250ms ease;
+}
+
+// SASS variable aliases — usable in component style blocks via @use / @forward.
+$color-bg:           var(--color-bg);
+$color-surface:      var(--color-surface);
+$color-surface-2:    var(--color-surface-2);
+$color-border:       var(--color-border);
+$color-text:         var(--color-text);
+$color-text-muted:   var(--color-text-muted);
+$color-primary:      var(--color-primary);
+$color-primary-hover:var(--color-primary-hover);
+$color-success:      var(--color-success);
+$color-warning:      var(--color-warning);
+$color-danger:       var(--color-danger);
+
+$space-1: var(--space-1);
+$space-2: var(--space-2);
+$space-3: var(--space-3);
+$space-4: var(--space-4);
+$space-5: var(--space-5);
+$space-6: var(--space-6);
+$space-7: var(--space-7);
+$space-8: var(--space-8);
+
+$font-family:         var(--font-family);
+$font-size-xs:        var(--font-size-xs);
+$font-size-sm:        var(--font-size-sm);
+$font-size-base:      var(--font-size-base);
+$font-size-lg:        var(--font-size-lg);
+$font-size-xl:        var(--font-size-xl);
+$font-size-2xl:       var(--font-size-2xl);
+$font-weight-normal:  var(--font-weight-normal);
+$font-weight-medium:  var(--font-weight-medium);
+$font-weight-bold:    var(--font-weight-bold);
+$line-height-tight:   var(--line-height-tight);
+$line-height-base:    var(--line-height-base);
+
+$radius-sm:   var(--radius-sm);
+$radius-md:   var(--radius-md);
+$radius-lg:   var(--radius-lg);
+$radius-full: var(--radius-full);
+
+$shadow-sm: var(--shadow-sm);
+$shadow-md: var(--shadow-md);
+
+$transition-fast:   var(--transition-fast);
+$transition-normal: var(--transition-normal);
