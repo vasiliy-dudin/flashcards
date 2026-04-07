@@ -54,19 +54,33 @@
           >
             ▶ Play
           </button>
+          <button class="card-detail__edit-btn" @click="showEditModal = true">Edit</button>
         </footer>
+
+        <CardEditModal
+          v-if="showEditModal"
+          :card="card"
+          @saved="onCardSaved"
+          @close="showEditModal = false"
+        />
       </div>
     </div>
   </Teleport>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import type { Card } from '../types'
 import { formatDate } from '../utils/formatDate'
+import CardEditModal from './CardEditModal.vue'
 
 const props = defineProps<{ modelValue: boolean; card: Card }>()
-const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  'card-updated': [card: Card]
+}>()
+
+const showEditModal = ref(false)
 
 function close(): void {
   emit('update:modelValue', false)
@@ -90,8 +104,13 @@ function playAudio(): void {
   })
 }
 
+function onCardSaved(updated: Card): void {
+  showEditModal.value = false
+  emit('card-updated', updated)
+}
+
 function handleKeydown(e: KeyboardEvent): void {
-  if (e.key === 'Escape') close()
+  if (e.key === 'Escape' && !showEditModal.value) close()
 }
 
 onMounted(() => document.addEventListener('keydown', handleKeydown))
@@ -223,6 +242,22 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
   gap: var(--space-3);
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
+}
+
+.card-detail__edit-btn {
+  margin-left: auto;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  &:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
 }
 
 .card-detail__audio-btn {

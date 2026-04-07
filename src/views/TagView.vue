@@ -15,7 +15,7 @@
 
     <CardGrid v-if="viewMode === 'grid'" :cards="filteredCards" @open="selectedCard = $event" />
     <CardTable v-else :cards="filteredCards" @open="selectedCard = $event" />
-    <CardDetailModal v-if="selectedCard" :model-value="true" :card="selectedCard" @update:model-value="selectedCard = null" />
+    <CardDetailModal v-if="selectedCard" :model-value="true" :card="selectedCard" @update:model-value="selectedCard = null" @card-updated="selectedCard = $event" />
   </main>
 </template>
 
