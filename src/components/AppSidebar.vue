@@ -5,16 +5,23 @@
     </section>
 
     <section class="sidebar__section">
-      <p class="sidebar__section-title">Decks</p>
+      <div class="sidebar__section-header">
+        <p class="sidebar__section-title">Decks</p>
+        <button class="sidebar__add-btn" aria-label="New deck" @click="showCreateDeckModal = true">+</button>
+      </div>
       <ul class="sidebar__list">
         <li v-for="deck in decks" :key="deck.id">
           <router-link :to="`/deck/${deck.id}`" class="sidebar__nav-item">
             {{ deck.name }}
           </router-link>
         </li>
-        <li v-if="decks.length === 0" class="sidebar__empty">No decks yet</li>
+        <li v-if="decks.length === 0">
+          <button class="sidebar__cta" @click="showCreateDeckModal = true">+ Create your first deck</button>
+        </li>
       </ul>
     </section>
+
+    <CreateDeckModal v-if="showCreateDeckModal" v-model="showCreateDeckModal" />
 
     <section class="sidebar__section">
       <p class="sidebar__section-title">Tags</p>
@@ -36,10 +43,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDecksStore } from '../stores/decks'
 import { useTagsStore } from '../stores/tags'
+import CreateDeckModal from './CreateDeckModal.vue'
 
 interface TagTreeNode {
   path: string
@@ -49,6 +57,8 @@ interface TagTreeNode {
 }
 
 const BASE_INDENT_LEVELS = 1
+
+const showCreateDeckModal = ref(false)
 
 const { decks } = storeToRefs(useDecksStore())
 const { tags } = storeToRefs(useTagsStore())
@@ -73,6 +83,13 @@ const tagTreeNodes = computed<TagTreeNode[]>(() =>
   gap: var(--space-1);
 }
 
+.sidebar__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: var(--space-2);
+}
+
 .sidebar__section-title {
   padding: var(--space-2) var(--space-4);
   font-size: var(--font-size-xs);
@@ -80,6 +97,36 @@ const tagTreeNodes = computed<TagTreeNode[]>(() =>
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-muted);
+}
+
+.sidebar__add-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-base);
+  line-height: 1;
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+  &:hover {
+    color: var(--color-text);
+    background-color: var(--color-surface-2);
+  }
+}
+
+.sidebar__cta {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  &:hover { background-color: var(--color-surface-2); }
 }
 
 .sidebar__list {
