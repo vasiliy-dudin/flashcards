@@ -1,5 +1,5 @@
 <template>
-  <article class="card-item">
+  <article class="card-item" @click="emit('open', card)">
     <header class="card-item__header">
       <span class="card-item__word">{{ card.word }}</span>
       <span class="card-item__badge" :class="`card-item__badge--${dueBadge.variant}`">
@@ -49,6 +49,7 @@ interface DueBadge {
 }
 
 const { card } = defineProps<{ card: Card }>()
+const emit = defineEmits<{ open: [card: Card] }>()
 
 function leafSegment(tagPath: string): string {
   return tagPath.split('/').at(-1) ?? tagPath
@@ -79,6 +80,7 @@ function playAudio(): void {
   flex-direction: column;
   gap: var(--space-3);
   transition: border-color var(--transition-fast);
+  cursor: pointer;
 
   &:hover {
     border-color: var(--color-primary);

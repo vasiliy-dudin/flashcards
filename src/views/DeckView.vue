@@ -34,15 +34,17 @@
 
     <p class="deck-view__count">{{ filteredCards.length }} card{{ filteredCards.length !== 1 ? 's' : '' }}</p>
 
-    <CardGrid v-if="viewMode === 'grid'" :cards="filteredCards" />
-    <CardTable v-else :cards="filteredCards" />
+    <CardGrid v-if="viewMode === 'grid'" :cards="filteredCards" @open="selectedCard = $event" />
+    <CardTable v-else :cards="filteredCards" @open="selectedCard = $event" />
 
     <AddCardModal v-if="showAddModal" v-model="showAddModal" :deck-id="deckId" />
+    <CardDetailModal v-if="selectedCard" :model-value="true" :card="selectedCard" @update:model-value="selectedCard = null" />
   </main>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import type { Card } from '../types'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { useCardsStore } from '../stores/cards'
@@ -51,6 +53,7 @@ import { useUiStore } from '../stores/ui'
 import CardGrid from '../components/CardGrid.vue'
 import CardTable from '../components/CardTable.vue'
 import AddCardModal from '../components/AddCardModal.vue'
+import CardDetailModal from '../components/CardDetailModal.vue'
 import ViewToggle from '../components/ViewToggle.vue'
 import SearchInput from '../components/SearchInput.vue'
 
@@ -81,6 +84,7 @@ const searchText = ref('')
 const selectedTags = ref<string[]>([])
 const tagsOpen = ref(false)
 const showAddModal = ref(false)
+const selectedCard = ref<Card | null>(null)
 
 function cardMatchesTags(cardTags: string[]): boolean {
   if (selectedTags.value.length === 0) return true

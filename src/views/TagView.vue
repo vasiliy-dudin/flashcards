@@ -13,19 +13,22 @@
       {{ filteredCards.length }} card{{ filteredCards.length !== 1 ? 's' : '' }}
     </p>
 
-    <CardGrid v-if="viewMode === 'grid'" :cards="filteredCards" />
-    <CardTable v-else :cards="filteredCards" />
+    <CardGrid v-if="viewMode === 'grid'" :cards="filteredCards" @open="selectedCard = $event" />
+    <CardTable v-else :cards="filteredCards" @open="selectedCard = $event" />
+    <CardDetailModal v-if="selectedCard" :model-value="true" :card="selectedCard" @update:model-value="selectedCard = null" />
   </main>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import type { Card } from '../types'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { useCardsStore } from '../stores/cards'
 import { useUiStore } from '../stores/ui'
 import CardGrid from '../components/CardGrid.vue'
 import CardTable from '../components/CardTable.vue'
+import CardDetailModal from '../components/CardDetailModal.vue'
 import ViewToggle from '../components/ViewToggle.vue'
 import SearchInput from '../components/SearchInput.vue'
 
@@ -41,6 +44,7 @@ const uiStore = useUiStore()
 const { viewMode } = storeToRefs(uiStore)
 
 const searchText = ref('')
+const selectedCard = ref<Card | null>(null)
 
 const tagCards = computed(() =>
   cardsStore.cards.filter(card =>

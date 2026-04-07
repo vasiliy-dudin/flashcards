@@ -10,14 +10,19 @@
     "test": "vitest",
     "test:run": "vitest run",
     "typecheck": "vue-tsc --noEmit",
-    "server:dev": "tsx watch server/index.ts"
+    "server:dev": "tsx watch server/index.ts",
+    "dev:all": "concurrently -n frontend,backend -c cyan,yellow \"pnpm dev\" \"pnpm server:dev\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.33.0",
   "pnpm": {
-    "onlyBuiltDependencies": ["better-sqlite3", "esbuild", "@parcel/watcher"]
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "@parcel/watcher"
+    ]
   },
   "dependencies": {
     "@hono/node-server": "^1.19.12",
@@ -34,6 +39,7 @@
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.5.2",
     "@vitejs/plugin-vue": "^6.0.5",
+    "concurrently": "^9.2.1",
     "drizzle-kit": "^0.31.10",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^29.0.1",

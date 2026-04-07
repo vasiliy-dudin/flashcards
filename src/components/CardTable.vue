@@ -19,7 +19,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="card in sortedCards" :key="card.id" class="card-table__row">
+        <tr v-for="card in sortedCards" :key="card.id" class="card-table__row" @click="emit('open', card)">
           <td class="card-table__td card-table__td--word">{{ card.word }}</td>
           <td class="card-table__td">{{ formatDate(card.createdAt) }}</td>
           <td class="card-table__td">
@@ -56,6 +56,7 @@ const COLUMNS: Column[] = [
 ]
 
 const { cards } = defineProps<{ cards: Card[] }>()
+const emit = defineEmits<{ open: [card: Card] }>()
 
 const sortKey = ref<SortKey>('word')
 const sortDir = ref<SortDir>('asc')
@@ -123,6 +124,7 @@ function dueBadgeClass(dueDate: string): string {
 .card-table__row {
   border-bottom: 1px solid var(--color-border);
   transition: background-color var(--transition-fast);
+  cursor: pointer;
 
   &:hover {
     background-color: var(--color-surface-2);

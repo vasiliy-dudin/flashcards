@@ -2,7 +2,7 @@
   <p v-if="cards.length === 0" class="card-grid__empty">No cards here yet.</p>
   <ul v-else class="card-grid">
     <li v-for="card in cards" :key="card.id">
-      <CardItem :card="card" />
+      <CardItem :card="card" @open="emit('open', $event)" />
     </li>
   </ul>
 </template>
@@ -12,6 +12,7 @@ import CardItem from './CardItem.vue'
 import type { Card } from '../types'
 
 defineProps<{ cards: Card[] }>()
+const emit = defineEmits<{ open: [card: Card] }>()
 </script>
 
 <style lang="scss" scoped>
