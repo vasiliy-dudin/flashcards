@@ -46,6 +46,8 @@ export interface SettingsConfig {
   limitNewCardsPerDay: number | null
   /** Custom instruction prepended to the AI prompt when generating card content */
   aiPrompt: string
+  /** Show card definitions (translations) in grid/table card views */
+  showTranslation: boolean
 }
 
 export const DEFAULT_SETTINGS: SettingsConfig = {
@@ -57,4 +59,5 @@ export const DEFAULT_SETTINGS: SettingsConfig = {
   reviewInReverse: false,
   limitNewCardsPerDay: 5,
   aiPrompt: '',
+  showTranslation: true,
 }

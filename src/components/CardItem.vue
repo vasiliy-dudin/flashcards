@@ -7,7 +7,7 @@
       </span>
     </header>
 
-    <p class="card-item__definition">{{ card.definition }}</p>
+    <p v-if="settingsStore.settings.showTranslation" class="card-item__definition">{{ card.definition }}</p>
 
     <footer class="card-item__footer">
       <div class="card-item__tags">
@@ -32,6 +32,7 @@ import { computed } from 'vue'
 import type { Card } from '../types'
 import { formatDate } from '../utils/formatDate'
 import { getCardDueStatus } from '../utils/cardStatus'
+import { useSettingsStore } from '../stores/settings'
 
 interface DueBadge {
   label: string
@@ -40,6 +41,7 @@ interface DueBadge {
 
 const { card } = defineProps<{ card: Card }>()
 const emit = defineEmits<{ open: [card: Card] }>()
+const settingsStore = useSettingsStore()
 
 function leafSegment(tagPath: string): string {
   return tagPath.split('/').at(-1) ?? tagPath
@@ -119,6 +121,7 @@ function playAudio(): void {
   line-height: var(--line-height-base);
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

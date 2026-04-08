@@ -6,6 +6,12 @@
     <header class="deck-view__header">
       <h2 class="deck-view__title">{{ deck?.name ?? 'Deck' }}</h2>
       <div class="deck-view__toolbar">
+        <button
+          class="btn-icon"
+          :class="{ 'is-active': settingsStore.settings.showTranslation }"
+          title="Toggle translation"
+          @click="settingsStore.updateSettings({ showTranslation: !settingsStore.settings.showTranslation })"
+        >T</button>
         <ViewToggle :model-value="viewMode" @update:model-value="uiStore.setViewMode" />
         <button class="btn-primary" @click="showAddModal = true">+ Add card</button>
       </div>
@@ -50,6 +56,7 @@ import { useRoute } from 'vue-router'
 import { useCardsStore } from '../stores/cards'
 import { useDecksStore } from '../stores/decks'
 import { useUiStore } from '../stores/ui'
+import { useSettingsStore } from '../stores/settings'
 import CardGrid from '../components/CardGrid.vue'
 import CardTable from '../components/CardTable.vue'
 import AddCardModal from '../components/AddCardModal.vue'
@@ -66,6 +73,7 @@ const deckId = computed<string>(() => {
 const decksStore = useDecksStore()
 const cardsStore = useCardsStore()
 const uiStore = useUiStore()
+const settingsStore = useSettingsStore()
 const { viewMode } = storeToRefs(uiStore)
 
 const deck = computed(() => decksStore.getDeckById(deckId.value))
@@ -129,6 +137,28 @@ const filteredCards = computed(() =>
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+
+.btn-icon {
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-text);
+  }
+
+  &.is-active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
 }
 
 .btn-primary {
