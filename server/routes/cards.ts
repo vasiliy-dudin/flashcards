@@ -31,8 +31,14 @@ app.post('/', async (c) => {
   if (!isCardBody(body)) {
     return c.json({ error: 'Missing required card fields' }, 400)
   }
-  const [row] = db.insert(cards).values(body).returning()
-  return c.json(row, 201)
+  try {
+    const [row] = db.insert(cards).values(body).returning().all()
+    return c.json(row, 201)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('[cards] POST insert failed:', message)
+    return c.json({ error: `DB insert failed: ${message}` }, 500)
+  }
 })
 
 app.put('/:id', async (c) => {
@@ -45,14 +51,20 @@ app.put('/:id', async (c) => {
     return c.json({ error: 'Patch must be an object' }, 400)
   }
   const patch = body as Partial<CardInsert>
-  const [row] = db.update(cards).set(patch).where(eq(cards.id, id)).returning()
-  if (row === undefined) return c.json({ error: 'Card not found' }, 404)
-  return c.json(row)
+  try {
+    const [row] = db.update(cards).set(patch).where(eq(cards.id, id)).returning().all()
+    if (row === undefined) return c.json({ error: 'Card not found' }, 404)
+    return c.json(row)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('[cards] PUT update failed:', message)
+    return c.json({ error: `DB update failed: ${message}` }, 500)
+  }
 })
 
 app.delete('/:id', (c) => {
   const id = c.req.param('id')
-  const [row] = db.delete(cards).where(eq(cards.id, id)).returning()
+  const [row] = db.delete(cards).where(eq(cards.id, id)).returning().all()
   if (row === undefined) return c.json({ error: 'Card not found' }, 404)
   return c.body(null, 204)
 })

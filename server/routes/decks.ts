@@ -27,7 +27,7 @@ app.post('/', async (c) => {
   if (!isDeckBody(body)) {
     return c.json({ error: 'Missing required deck fields' }, 400)
   }
-  const [row] = db.insert(decks).values(body).returning()
+  const [row] = db.insert(decks).values(body).returning().all()
   return c.json(row, 201)
 })
 
