@@ -52,6 +52,10 @@
       </ul>
     </section>
 
+    <div class="sidebar__footer">
+      <router-link to="/settings" class="sidebar__nav-item">Settings</router-link>
+    </div>
+
     <CardDetailModal
       v-if="selectedCard"
       :model-value="true"
@@ -127,6 +131,19 @@ function onSearchFocusOut(e: FocusEvent): void {
 </script>
 
 <style lang="scss" scoped>
+nav {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.sidebar__footer {
+  margin-top: auto;
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
 .sidebar__search {
   position: relative;
   padding: var(--space-3) var(--space-3) var(--space-2);

@@ -22,7 +22,8 @@
           @click="flipCard"
         >
           <div class="inbox__face inbox__face--front">
-            <span class="inbox__word">{{ currentCard.word }}</span>
+            <span v-if="!isReverse" class="inbox__word">{{ currentCard.word }}</span>
+            <p v-else class="inbox__definition">{{ currentCard.definition }}</p>
           </div>
           <div class="inbox__face inbox__face--back">
             <span class="inbox__word">{{ currentCard.word }}</span>
@@ -48,11 +49,15 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import type { Card } from '../types'
 import { useCardsStore } from '../stores/cards'
+import { useSettingsStore } from '../stores/settings'
 import { scheduleCard, type ReviewResult } from '../utils/scheduler'
+import { buildReviewQueue } from '../utils/buildReviewQueue'
 import { updateCard as updateCardApi } from '../api/cards'
 
 const cardsStore = useCardsStore()
+const settingsStore = useSettingsStore()
 
 const queue = ref<Card[]>([])
 const totalCount = ref(0)
@@ -61,13 +66,13 @@ const persistError = ref('')
 
 const currentCard = computed<Card | undefined>(() => queue.value[0])
 const reviewedCount = computed<number>(() => totalCount.value - queue.value.length)
+const isReverse = computed<boolean>(() => settingsStore.settings.reviewInReverse)
 
 onMounted(() => {
   const today = new Date().toISOString().slice(0, 10)
-  queue.value = [...cardsStore.cards]
-    .filter(c => c.dueDate <= today)
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
-  totalCount.value = queue.value.length
+  const due = buildReviewQueue(cardsStore.cards, today, settingsStore.settings)
+  queue.value = due
+  totalCount.value = due.length
 })
 
 function flipCard(): void {
@@ -79,7 +84,7 @@ async function submitReview(result: ReviewResult): Promise<void> {
   if (!card) return
 
   persistError.value = ''
-  const patch = scheduleCard(card, result)
+  const patch = scheduleCard(card, result, settingsStore.settings)
 
   try {
     await updateCardApi(card.id, patch)

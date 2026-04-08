@@ -34,3 +34,27 @@ export interface Tag {
   name: string
   cardCount: number
 }
+
+export interface SettingsConfig {
+  rememberMultiplier: number
+  forgetMultiplier: number
+  maxIntervalDays: number
+  applyFuzzing: boolean
+  retireCards: boolean
+  reviewInReverse: boolean
+  /** null means unlimited */
+  limitNewCardsPerDay: number | null
+  /** Custom instruction prepended to the AI prompt when generating card content */
+  aiPrompt: string
+}
+
+export const DEFAULT_SETTINGS: SettingsConfig = {
+  rememberMultiplier: 1.8,
+  forgetMultiplier: 0.5,
+  maxIntervalDays: 365,
+  applyFuzzing: true,
+  retireCards: true,
+  reviewInReverse: false,
+  limitNewCardsPerDay: 5,
+  aiPrompt: '',
+}

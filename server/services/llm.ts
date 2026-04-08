@@ -7,7 +7,7 @@ export interface LlmResponse {
 }
 
 export interface LlmProvider {
-  generateCardContent(word: string): Promise<LlmResponse>
+  generateCardContent(word: string, customPrompt?: string): Promise<LlmResponse>
 }
 
 interface GeminiApiResponse {
@@ -30,13 +30,13 @@ const RESPONSE_SCHEMA = {
   required: ['dictionary', 'aiExample'],
 }
 
-function buildPrompt(word: string): string {
-  return (
+function buildPrompt(word: string, customPrompt?: string): string {
+  const base =
     `You are a British English dictionary. For the word or phrase "${word}", return:\n` +
     `1. "dictionary": IPA transcription and the 2-4 most common meanings as short numbered phrases.\n` +
     `2. "aiExample": one natural example sentence in British English.\n` +
     `Keep meanings concise (under 10 words each). Use British English spelling.`
-  )
+  return customPrompt ? `${base}\n\nAdditional instructions: ${customPrompt}` : base
 }
 
 function isGeminiApiResponse(data: unknown): data is GeminiApiResponse {
@@ -65,13 +65,13 @@ export class GeminiProvider implements LlmProvider {
     this.model = model
   }
 
-  async generateCardContent(word: string): Promise<LlmResponse> {
+  async generateCardContent(word: string, customPrompt?: string): Promise<LlmResponse> {
     const url = `${GEMINI_ENDPOINT}/${this.model}:generateContent`
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'x-goog-api-key': this.apiKey, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: buildPrompt(word) }] }],
+        contents: [{ parts: [{ text: buildPrompt(word, customPrompt) }] }],
         generationConfig: {
           responseMimeType: 'application/json',
           responseJsonSchema: RESPONSE_SCHEMA,

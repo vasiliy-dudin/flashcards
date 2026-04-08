@@ -58,3 +58,66 @@ describe('scheduleCard', () => {
     expect(result.dueDate > today).toBe(true)
   })
 })
+
+describe('scheduleCard — custom ScheduleConfig', () => {
+  it('uses custom rememberMultiplier', () => {
+    // interval 10, multiplier 3.0, no fuzz → raw = 30
+    const result = scheduleCard(BASE_CARD, 'remember', {
+      rememberMultiplier: 3.0,
+      forgetMultiplier: 0.5,
+      maxIntervalDays: 365,
+      applyFuzzing: false,
+    })
+    expect(result.interval).toBe(30)
+  })
+
+  it('uses custom forgetMultiplier', () => {
+    // interval 10, multiplier 0.2, no fuzz → raw = round(2) = 2
+    const result = scheduleCard(BASE_CARD, 'forget', {
+      rememberMultiplier: 1.8,
+      forgetMultiplier: 0.2,
+      maxIntervalDays: 365,
+      applyFuzzing: false,
+    })
+    expect(result.interval).toBe(2)
+  })
+
+  it('caps at custom maxIntervalDays', () => {
+    // interval 10, multiplier 3.0, no fuzz → raw 30, capped at 20
+    const result = scheduleCard(BASE_CARD, 'remember', {
+      rememberMultiplier: 3.0,
+      forgetMultiplier: 0.5,
+      maxIntervalDays: 20,
+      applyFuzzing: false,
+    })
+    expect(result.interval).toBe(20)
+  })
+
+  it('applyFuzzing: false gives exact (deterministic) interval', () => {
+    // interval 10, multiplier 1.8, no fuzz → exact 18 every time
+    const results = Array.from({ length: 20 }, () =>
+      scheduleCard(BASE_CARD, 'remember', {
+        rememberMultiplier: 1.8,
+        forgetMultiplier: 0.5,
+        maxIntervalDays: 365,
+        applyFuzzing: false,
+      })
+    )
+    expect(results.every(r => r.interval === 18)).toBe(true)
+  })
+
+  it('applyFuzzing: true introduces variation over many runs', () => {
+    const intervals = new Set(
+      Array.from({ length: 30 }, () =>
+        scheduleCard(BASE_CARD, 'remember', {
+          rememberMultiplier: 1.8,
+          forgetMultiplier: 0.5,
+          maxIntervalDays: 365,
+          applyFuzzing: true,
+        }).interval
+      )
+    )
+    // With fuzz ±10% on interval 18, we expect more than one distinct value across 30 runs
+    expect(intervals.size).toBeGreaterThan(1)
+  })
+})

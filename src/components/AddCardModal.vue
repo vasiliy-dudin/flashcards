@@ -74,6 +74,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useCardsStore } from '../stores/cards'
 import { useTagsStore } from '../stores/tags'
+import { useSettingsStore } from '../stores/settings'
 import { createCard } from '../api/cards'
 import type { Card, DictionaryEntry } from '../types'
 import TagsInput from './TagsInput.vue'
@@ -83,6 +84,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
 
 const cardsStore = useCardsStore()
 const tagsStore = useTagsStore()
+const settingsStore = useSettingsStore()
 
 const word = ref('')
 const definition = ref('')
@@ -131,10 +133,11 @@ async function fetchCardContent(term: string): Promise<{ dictionary: DictionaryE
     aiExample: '',
   }
   try {
+    const customPrompt = settingsStore.settings.aiPrompt.trim() || undefined
     const res = await fetch('/api/generate-card-content', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ word: term }),
+      body: JSON.stringify({ word: term, customPrompt }),
     })
     if (!res.ok) return degraded
     const raw = await res.json() as { dictionary?: { transcription?: string; meanings?: string[] }; aiExample?: string }
