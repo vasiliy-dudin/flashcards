@@ -188,6 +188,7 @@ async function handleSubmit(): Promise<void> {
     const saved = await createCard(card)
     cardsStore.addCard(saved)
     tags.value.forEach(tag => tagsStore.upsertTag(tag))
+    isLoading.value = false
     close()
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Something went wrong.'
