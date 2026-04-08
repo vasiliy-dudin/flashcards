@@ -1,5 +1,5 @@
 <template>
-  <div class="tags-input" @click="focusInput">
+  <div ref="containerRef" class="tags-input" @click="focusInput">
     <span v-for="tag in modelValue" :key="tag" class="tags-input__chip">
       {{ tag }}
       <button
@@ -16,20 +16,84 @@
       type="text"
       placeholder="Add tag…"
       :disabled="disabled"
+      @focus="onFocus"
       @keydown="onKeydown"
-      @blur="confirmDraft"
+      @blur="onBlur"
     />
+    <Teleport to="body">
+      <ul
+        v-if="showDropdown"
+        class="tags-input__dropdown"
+        :style="dropdownStyle"
+        role="listbox"
+      >
+        <li
+          v-for="(suggestion, i) in filteredSuggestions"
+          :key="suggestion"
+          :class="['tags-input__suggestion', { 'tags-input__suggestion--active': i === activeIndex }]"
+          role="option"
+          @mousedown.prevent="selectSuggestion(suggestion)"
+        >
+          {{ suggestion }}
+        </li>
+      </ul>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 
-const props = defineProps<{ modelValue: string[]; disabled?: boolean }>()
+const props = defineProps<{ modelValue: string[]; suggestions?: string[]; disabled?: boolean }>()
 const emit = defineEmits<{ 'update:modelValue': [value: string[]] }>()
+
+const MAX_SUGGESTIONS = 8
 
 const draft = ref('')
 const inputRef = ref<HTMLInputElement | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
+const activeIndex = ref(-1)
+const inputFocused = ref(false)
+const dropdownStyle = ref({ top: '0px', left: '0px', width: '0px' })
+
+const filteredSuggestions = computed((): string[] => {
+  if (!props.suggestions?.length) return []
+  const available = props.suggestions.filter(s => !props.modelValue.includes(s))
+  if (!draft.value) return available.slice(0, MAX_SUGGESTIONS)
+  const query = draft.value.toLowerCase()
+  return available.filter(s => s.toLowerCase().startsWith(query)).slice(0, MAX_SUGGESTIONS)
+})
+
+const showDropdown = computed((): boolean => inputFocused.value && filteredSuggestions.value.length > 0)
+
+watch(draft, () => { activeIndex.value = -1 })
+
+watch(showDropdown, async (visible) => {
+  if (visible) {
+    await nextTick()
+    updateDropdownPosition()
+  }
+})
+
+function updateDropdownPosition(): void {
+  const rect = containerRef.value?.getBoundingClientRect()
+  if (!rect) return
+  dropdownStyle.value = {
+    top: `${rect.bottom + 4}px`,
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+  }
+}
+
+function onFocus(): void {
+  inputFocused.value = true
+  updateDropdownPosition()
+}
+
+function onBlur(): void {
+  inputFocused.value = false
+  confirmDraft()
+}
 
 function focusInput(): void {
   inputRef.value?.focus()
@@ -43,14 +107,32 @@ function confirmDraft(): void {
   draft.value = ''
 }
 
+function selectSuggestion(suggestion: string): void {
+  if (!props.modelValue.includes(suggestion)) {
+    emit('update:modelValue', [...props.modelValue, suggestion])
+  }
+  draft.value = ''
+  activeIndex.value = -1
+}
+
 function removeTag(tag: string): void {
   emit('update:modelValue', props.modelValue.filter(t => t !== tag))
 }
 
 function onKeydown(e: KeyboardEvent): void {
-  if (e.key === 'Enter' || e.key === ',') {
+  if (e.key === 'ArrowDown') {
     e.preventDefault()
-    confirmDraft()
+    activeIndex.value = Math.min(activeIndex.value + 1, filteredSuggestions.value.length - 1)
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    activeIndex.value = Math.max(activeIndex.value - 1, -1)
+  } else if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault()
+    if (activeIndex.value >= 0) {
+      selectSuggestion(filteredSuggestions.value[activeIndex.value])
+    } else {
+      confirmDraft()
+    }
   } else if (e.key === 'Backspace' && draft.value === '') {
     const last = props.modelValue.at(-1)
     if (last !== undefined) removeTag(last)
@@ -60,6 +142,7 @@ function onKeydown(e: KeyboardEvent): void {
 
 <style lang="scss" scoped>
 .tags-input {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -118,6 +201,34 @@ function onKeydown(e: KeyboardEvent): void {
 
   &:disabled {
     opacity: 0.5;
+  }
+}
+
+.tags-input__dropdown {
+  position: fixed;
+  z-index: 200;
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1) 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.tags-input__suggestion {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  cursor: pointer;
+
+  &:hover,
+  &--active {
+    background-color: var(--color-surface-2);
+    color: var(--color-primary);
   }
 }
 </style>

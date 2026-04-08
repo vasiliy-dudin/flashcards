@@ -25,7 +25,7 @@
 
           <label class="modal__label">
             Tags
-            <TagsInput v-model="tags" :disabled="isSaving" />
+            <TagsInput v-model="tags" :suggestions="tagSuggestions" :disabled="isSaving" />
             <span class="modal__hint">Enter or comma to confirm each tag</span>
           </label>
 
@@ -50,8 +50,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useCardsStore } from '../stores/cards'
+import { useTagsStore } from '../stores/tags'
 import { updateCard as updateCardApi } from '../api/cards'
 import type { Card } from '../types'
 import TagsInput from './TagsInput.vue'
@@ -63,6 +64,9 @@ const emit = defineEmits<{
 }>()
 
 const cardsStore = useCardsStore()
+const tagsStore = useTagsStore()
+
+const tagSuggestions = computed((): string[] => tagsStore.tags.map(t => t.name))
 
 const word = ref(props.card.word)
 const definition = ref(props.card.definition)
@@ -108,6 +112,10 @@ async function handleSubmit(): Promise<void> {
       tags: tags.value,
     })
     cardsStore.updateCard(props.card.id, updated)
+    const added = tags.value.filter(t => !props.card.tags.includes(t))
+    const removed = props.card.tags.filter(t => !tags.value.includes(t))
+    added.forEach(t => tagsStore.upsertTag(t))
+    removed.forEach(t => tagsStore.decrementTag(t))
     emit('saved', updated)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Something went wrong.'

@@ -46,7 +46,7 @@
 
           <label class="modal__label">
             Tags
-            <TagsInput v-model="tags" :disabled="isLoading" />
+            <TagsInput v-model="tags" :suggestions="tagSuggestions" :disabled="isLoading" />
             <span class="modal__hint">Enter or comma to confirm each tag</span>
           </label>
 
@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useCardsStore } from '../stores/cards'
 import { useTagsStore } from '../stores/tags'
 import { useSettingsStore } from '../stores/settings'
@@ -85,6 +85,8 @@ const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
 const cardsStore = useCardsStore()
 const tagsStore = useTagsStore()
 const settingsStore = useSettingsStore()
+
+const tagSuggestions = computed((): string[] => tagsStore.tags.map(t => t.name))
 
 const word = ref('')
 const definition = ref('')

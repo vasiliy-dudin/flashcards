@@ -2,7 +2,15 @@
   <main class="tag-view">
     <header class="tag-view__header">
       <h2 class="tag-view__title">{{ tagName }}</h2>
-      <ViewToggle :model-value="viewMode" @update:model-value="uiStore.setViewMode" />
+      <div class="tag-view__toolbar">
+        <button
+          class="btn-icon"
+          :class="{ 'is-active': settingsStore.settings.showTranslation }"
+          title="Toggle translation"
+          @click="settingsStore.updateSettings({ showTranslation: !settingsStore.settings.showTranslation })"
+        >T</button>
+        <ViewToggle :model-value="viewMode" @update:model-value="uiStore.setViewMode" />
+      </div>
     </header>
 
     <div class="tag-view__filters">
@@ -26,6 +34,7 @@ import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { useCardsStore } from '../stores/cards'
 import { useUiStore } from '../stores/ui'
+import { useSettingsStore } from '../stores/settings'
 import CardGrid from '../components/CardGrid.vue'
 import CardTable from '../components/CardTable.vue'
 import CardDetailModal from '../components/CardDetailModal.vue'
@@ -41,6 +50,7 @@ const tagName = computed<string>(() => {
 
 const cardsStore = useCardsStore()
 const uiStore = useUiStore()
+const settingsStore = useSettingsStore()
 const { viewMode } = storeToRefs(uiStore)
 
 const searchText = ref('')
@@ -79,6 +89,34 @@ const filteredCards = computed(() => {
 .tag-view__title {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
+}
+
+.tag-view__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.btn-icon {
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-text);
+  }
+
+  &.is-active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
 }
 
 .tag-view__filters {
