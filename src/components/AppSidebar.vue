@@ -1,5 +1,17 @@
 <template>
   <nav class="sidebar">
+    <div class="sidebar__search" @focusout="onSearchFocusOut">
+      <SearchInput v-model="searchQuery" placeholder="Search cards…" />
+      <ul v-if="searchResults.length > 0" class="sidebar__search-results">
+        <li v-for="card in searchResults" :key="card.id">
+          <button class="sidebar__search-result" @click="selectResult(card)">
+            <span class="sidebar__search-result-word">{{ card.word }}</span>
+            <span class="sidebar__search-result-deck">{{ deckNameById.get(card.deckId) ?? '' }}</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
     <section class="sidebar__section">
       <router-link to="/" class="sidebar__nav-item">Inbox</router-link>
     </section>
@@ -39,6 +51,14 @@
         <li v-if="tagTreeNodes.length === 0" class="sidebar__empty">No tags yet</li>
       </ul>
     </section>
+
+    <CardDetailModal
+      v-if="selectedCard"
+      :model-value="true"
+      :card="selectedCard"
+      @update:model-value="selectedCard = null"
+      @card-updated="selectedCard = $event"
+    />
   </nav>
 </template>
 
@@ -47,7 +67,11 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDecksStore } from '../stores/decks'
 import { useTagsStore } from '../stores/tags'
+import { useCardsStore } from '../stores/cards'
+import type { Card } from '../types'
 import CreateDeckModal from './CreateDeckModal.vue'
+import SearchInput from './SearchInput.vue'
+import CardDetailModal from './CardDetailModal.vue'
 
 interface TagTreeNode {
   path: string
@@ -57,11 +81,17 @@ interface TagTreeNode {
 }
 
 const BASE_INDENT_LEVELS = 1
+const MAX_SEARCH_RESULTS = 10
 
 const showCreateDeckModal = ref(false)
+const searchQuery = ref('')
+const selectedCard = ref<Card | null>(null)
 
 const { decks } = storeToRefs(useDecksStore())
 const { tags } = storeToRefs(useTagsStore())
+const { cards } = storeToRefs(useCardsStore())
+
+const deckNameById = computed(() => new Map(decks.value.map(d => [d.id, d.name])))
 
 const tagTreeNodes = computed<TagTreeNode[]>(() =>
   [...tags.value]
@@ -73,14 +103,72 @@ const tagTreeNodes = computed<TagTreeNode[]>(() =>
       cardCount: tag.cardCount,
     }))
 )
+
+const searchResults = computed<Card[]>(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return []
+  return cards.value
+    .filter(c => c.word.toLowerCase().includes(q) || c.definition.toLowerCase().includes(q))
+    .slice(0, MAX_SEARCH_RESULTS)
+})
+
+function selectResult(card: Card): void {
+  selectedCard.value = card
+  searchQuery.value = ''
+}
+
+function onSearchFocusOut(e: FocusEvent): void {
+  const container = e.currentTarget as HTMLElement
+  const related = e.relatedTarget as Node | null
+  if (!related || !container.contains(related)) {
+    searchQuery.value = ''
+  }
+}
 </script>
 
 <style lang="scss" scoped>
-.app-sidebar {
+.sidebar__search {
+  position: relative;
+  padding: var(--space-3) var(--space-3) var(--space-2);
+}
+
+.sidebar__search-results {
+  position: absolute;
+  top: 100%;
+  left: var(--space-3);
+  right: var(--space-3);
+  z-index: var(--z-index-dropdown);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  list-style: none;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.sidebar__search-result {
   display: flex;
   flex-direction: column;
-  padding: var(--space-3) 0;
-  gap: var(--space-1);
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  &:hover { background-color: var(--color-surface-2); }
+}
+
+.sidebar__search-result-word {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.sidebar__search-result-deck {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 
 .sidebar__section-header {
