@@ -22,18 +22,35 @@
         <button class="sidebar__add-btn" aria-label="New deck" @click="showCreateDeckModal = true">+</button>
       </div>
       <ul class="sidebar__list">
-        <li v-for="deck in decks" :key="deck.id">
-          <router-link :to="`/deck/${deck.id}`" class="sidebar__nav-item">
-            {{ deck.name }}
-          </router-link>
-        </li>
+        <DeckItem
+          v-for="deck in decks"
+          :key="deck.id"
+          :deck="deck"
+          @rename="onRenameDeck(deck.id)"
+          @delete="onDeleteDeck(deck.id)"
+        />
         <li v-if="decks.length === 0">
           <button class="sidebar__cta" @click="showCreateDeckModal = true">+ Create your first deck</button>
         </li>
       </ul>
+      <p v-if="renameError" class="sidebar__error">{{ renameError }}</p>
+      <div v-if="deletingDeckId !== null" class="sidebar__delete-confirm">
+        <span>Delete "{{ decksStore.getDeckById(deletingDeckId)?.name }}"?</span>
+        <div class="sidebar__delete-confirm-actions">
+          <button class="sidebar__delete-confirm-btn sidebar__delete-confirm-btn--yes" @click="handleDeleteConfirm">Yes</button>
+          <button class="sidebar__delete-confirm-btn" @click="deletingDeckId = null">Cancel</button>
+        </div>
+      </div>
+      <p v-if="deleteError" class="sidebar__error">{{ deleteError }}</p>
     </section>
 
     <CreateDeckModal v-if="showCreateDeckModal" v-model="showCreateDeckModal" />
+    <RenameDeckModal
+      v-if="renamingDeckId !== null"
+      :current-name="decksStore.getDeckById(renamingDeckId)?.name ?? ''"
+      @confirm="handleRenameConfirm"
+      @cancel="renamingDeckId = null"
+    />
 
     <section class="sidebar__section">
       <p class="sidebar__section-title">Tags</p>
@@ -68,12 +85,16 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useDecksStore } from '../stores/decks'
 import { useTagsStore } from '../stores/tags'
 import { useCardsStore } from '../stores/cards'
 import type { Card } from '../types'
+import { renameDeck, deleteDeck } from '../api/decks'
 import CreateDeckModal from './CreateDeckModal.vue'
+import DeckItem from './DeckItem.vue'
+import RenameDeckModal from './RenameDeckModal.vue'
 import SearchInput from './SearchInput.vue'
 import CardDetailModal from './CardDetailModal.vue'
 
@@ -88,12 +109,21 @@ const BASE_INDENT_LEVELS = 1
 const MAX_SEARCH_RESULTS = 10
 
 const showCreateDeckModal = ref(false)
+const renamingDeckId = ref<string | null>(null)
+const renameError = ref('')
+const deletingDeckId = ref<string | null>(null)
+const deleteError = ref('')
 const searchQuery = ref('')
 const selectedCard = ref<Card | null>(null)
 
-const { decks } = storeToRefs(useDecksStore())
+const route = useRoute()
+const router = useRouter()
+
+const decksStore = useDecksStore()
+const cardsStore = useCardsStore()
+const { decks } = storeToRefs(decksStore)
 const { tags } = storeToRefs(useTagsStore())
-const { cards } = storeToRefs(useCardsStore())
+const { cards } = storeToRefs(cardsStore)
 
 const deckNameById = computed(() => new Map(decks.value.map(d => [d.id, d.name])))
 
@@ -119,6 +149,51 @@ const searchResults = computed<Card[]>(() => {
 function selectResult(card: Card): void {
   selectedCard.value = card
   searchQuery.value = ''
+}
+
+function onRenameDeck(id: string): void {
+  renameError.value = ''
+  deleteError.value = ''
+  deletingDeckId.value = null
+  renamingDeckId.value = id
+}
+
+async function handleRenameConfirm(newName: string): Promise<void> {
+  const id = renamingDeckId.value
+  if (!id) return
+  try {
+    await renameDeck(id, newName)
+    decksStore.updateDeck(id, { name: newName })
+    renamingDeckId.value = null
+  } catch (err) {
+    renameError.value = err instanceof Error ? err.message : 'Failed to rename deck.'
+    renamingDeckId.value = null
+    console.error('[AppSidebar] Deck rename failed:', id, err)
+  }
+}
+
+function onDeleteDeck(id: string): void {
+  deleteError.value = ''
+  renameError.value = ''
+  renamingDeckId.value = null
+  deletingDeckId.value = id
+}
+
+async function handleDeleteConfirm(): Promise<void> {
+  const id = deletingDeckId.value
+  if (!id) return
+  deletingDeckId.value = null
+  try {
+    await deleteDeck(id)
+    cardsStore.setCards(cards.value.filter(c => c.deckId !== id))
+    decksStore.removeDeck(id)
+    if (route.path === `/deck/${id}`) {
+      await router.push('/')
+    }
+  } catch (err) {
+    deleteError.value = err instanceof Error ? err.message : 'Failed to delete deck.'
+    console.error('[AppSidebar] Deck delete failed:', id, err)
+  }
 }
 
 function onSearchFocusOut(e: FocusEvent): void {
@@ -273,5 +348,43 @@ nav {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   font-style: italic;
+}
+
+.sidebar__error {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+}
+
+.sidebar__delete-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.sidebar__delete-confirm-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.sidebar__delete-confirm-btn {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-2);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: filter var(--transition-fast);
+  &:hover { filter: brightness(1.2); }
+
+  &--yes {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+    color: #fff;
+  }
 }
 </style>
