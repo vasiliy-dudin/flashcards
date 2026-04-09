@@ -19,6 +19,7 @@ function makeCard(overrides: Partial<Card> & { id: string }): Card {
     interval: 10,
     dueDate: TODAY,
     createdAt: '2026-01-01',
+    inReview: true,
     ...overrides,
   }
 }
@@ -104,6 +105,15 @@ describe('buildReviewQueue', () => {
       limitNewCardsPerDay: null,
     })
     expect(result).toHaveLength(10)
+  })
+
+  it('excludes cards where inReview is false', () => {
+    const cards = [
+      makeCard({ id: 'enrolled', inReview: true }),
+      makeCard({ id: 'not-enrolled', inReview: false }),
+    ]
+    const result = buildReviewQueue(cards, TODAY, BASE_CONFIG)
+    expect(result.map(c => c.id)).toEqual(['enrolled'])
   })
 
   it('retireCards + limitNewCardsPerDay both apply together', () => {

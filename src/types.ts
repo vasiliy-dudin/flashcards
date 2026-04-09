@@ -20,6 +20,8 @@ export interface Card {
   dueDate: string
   /** ISO date string */
   createdAt: string
+  /** Whether the card has been manually enrolled in the review queue */
+  inReview: boolean
 }
 
 export interface Deck {

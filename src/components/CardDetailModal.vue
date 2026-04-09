@@ -54,6 +54,23 @@
           >
             ▶ Play
           </button>
+          <div class="card-detail__review-actions">
+            <button
+              class="card-detail__review-btn"
+              :disabled="isUpdating"
+              @click="toggleReview"
+            >
+              {{ card.inReview ? 'Remove from review' : 'Send to review' }}
+            </button>
+            <button
+              v-if="card.inReview"
+              class="card-detail__reset-btn"
+              :disabled="isUpdating"
+              @click="resetProgress"
+            >
+              Reset progress
+            </button>
+          </div>
           <div class="card-detail__actions">
             <template v-if="!showDeleteConfirm">
               <button class="card-detail__edit-btn" @click="showEditModal = true">Edit</button>
@@ -85,7 +102,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import type { Card } from '../types'
 import { formatDate } from '../utils/formatDate'
 import CardEditModal from './CardEditModal.vue'
-import { deleteCard as deleteCardApi } from '../api/cards'
+import { deleteCard as deleteCardApi, updateCard as updateCardApi } from '../api/cards'
 import { useCardsStore } from '../stores/cards'
 import { useTagsStore } from '../stores/tags'
 
@@ -101,6 +118,7 @@ const tagsStore = useTagsStore()
 const showEditModal = ref(false)
 const showDeleteConfirm = ref(false)
 const isDeleting = ref(false)
+const isUpdating = ref(false)
 
 function close(): void {
   emit('update:modelValue', false)
@@ -115,6 +133,35 @@ function onOverlayMouseDown(e: MouseEvent): void {
 function onOverlayMouseUp(e: MouseEvent): void {
   if (overlayMouseDowned && e.target === e.currentTarget) close()
   overlayMouseDowned = false
+}
+
+async function toggleReview(): Promise<void> {
+  if (isUpdating.value) return
+  isUpdating.value = true
+  try {
+    const updated = await updateCardApi(props.card.id, { inReview: !props.card.inReview })
+    cardsStore.updateCard(props.card.id, { inReview: updated.inReview })
+    emit('card-updated', updated)
+  } catch (err) {
+    console.error('[CardDetailModal] toggleReview failed:', props.card.id, err)
+  } finally {
+    isUpdating.value = false
+  }
+}
+
+async function resetProgress(): Promise<void> {
+  if (isUpdating.value) return
+  isUpdating.value = true
+  const today = new Date().toISOString().slice(0, 10)
+  try {
+    const updated = await updateCardApi(props.card.id, { interval: 1, dueDate: today })
+    cardsStore.updateCard(props.card.id, { interval: 1, dueDate: today })
+    emit('card-updated', updated)
+  } catch (err) {
+    console.error('[CardDetailModal] resetProgress failed:', props.card.id, err)
+  } finally {
+    isUpdating.value = false
+  }
 }
 
 function playAudio(): void {
@@ -276,6 +323,28 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
   gap: var(--space-3);
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
+}
+
+.card-detail__review-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.card-detail__review-btn,
+.card-detail__reset-btn {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-2);
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  &:hover:not(:disabled) {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 
 .card-detail__actions {

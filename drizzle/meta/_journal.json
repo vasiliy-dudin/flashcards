@@ -15,6 +15,13 @@
       "when": 1775660000000,
       "tag": "0001_card_model_redesign",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1775763680294,
+      "tag": "0002_add_in_review",
+      "breakpoints": true
     }
   ]
 }
