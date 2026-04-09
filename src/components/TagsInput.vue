@@ -1,11 +1,12 @@
 <template>
-  <div ref="containerRef" class="tags-input" @click="focusInput">
+  <div ref="containerRef" class="tags-input" @click="onContainerClick">
     <span v-for="tag in modelValue" :key="tag" class="tags-input__chip">
       {{ tag }}
       <button
         type="button"
         class="tags-input__remove"
         :aria-label="`Remove tag ${tag}`"
+        @mousedown.stop
         @click.stop="removeTag(tag)"
       >×</button>
     </span>
@@ -92,11 +93,15 @@ function onFocus(): void {
 
 function onBlur(): void {
   inputFocused.value = false
-  confirmDraft()
+  draft.value = ''
 }
 
-function focusInput(): void {
-  inputRef.value?.focus()
+function onContainerClick(e: MouseEvent): void {
+  // Only focus the input when clicking on the container background or chips,
+  // not when clicking the remove button (it has @click.stop and handles itself).
+  if (e.target !== inputRef.value) {
+    inputRef.value?.focus()
+  }
 }
 
 function confirmDraft(): void {
@@ -173,16 +178,21 @@ function onKeydown(e: KeyboardEvent): void {
 }
 
 .tags-input__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: none;
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   cursor: pointer;
-  padding: 0;
+  padding: 0 2px;
   line-height: 1;
+  border-radius: 2px;
 
   &:hover {
     color: var(--color-danger);
+    background-color: color-mix(in srgb, var(--color-danger) 12%, transparent);
   }
 }
 

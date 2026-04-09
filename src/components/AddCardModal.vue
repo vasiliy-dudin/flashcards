@@ -44,11 +44,11 @@
             />
           </label>
 
-          <label class="modal__label">
+          <div class="modal__label">
             Tags
             <TagsInput v-model="tags" :suggestions="tagSuggestions" :disabled="isLoading" />
             <span class="modal__hint">Enter or comma to confirm each tag</span>
-          </label>
+          </div>
 
           <p v-if="error" class="modal__error">{{ error }}</p>
 

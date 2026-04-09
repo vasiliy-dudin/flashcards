@@ -23,11 +23,11 @@
             <textarea v-model="examples" class="modal__input modal__input--textarea" rows="3" :disabled="isSaving" />
           </label>
 
-          <label class="modal__label">
+          <div class="modal__label">
             Tags
             <TagsInput v-model="tags" :suggestions="tagSuggestions" :disabled="isSaving" />
             <span class="modal__hint">Enter or comma to confirm each tag</span>
-          </label>
+          </div>
 
           <p v-if="error" class="modal__error">{{ error }}</p>
 
