@@ -116,9 +116,6 @@ const tagsOpen = ref(false)
 const showAddModal = ref(false)
 const selectedCard = ref<Card | null>(null)
 const selectedIds = ref<Set<string>>(new Set())
-
-watch(filteredCards, () => { selectedIds.value = new Set() })
-
 const isBulkLoading = ref(false)
 
 async function bulkUpdate(patch: Partial<Card>): Promise<void> {
@@ -183,6 +180,8 @@ const filteredCards = computed(() =>
     return matchesText && cardMatchesTags(card.tags)
   })
 )
+
+watch(filteredCards, () => { selectedIds.value = new Set() })
 </script>
 
 <style lang="scss" scoped>

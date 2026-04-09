@@ -25,7 +25,10 @@ import { ref } from 'vue'
 import CardItem from './CardItem.vue'
 import type { Card } from '../types'
 
-const props = defineProps<{ cards: Card[]; selectedIds: Set<string> }>()
+const props = withDefaults(
+  defineProps<{ cards: Card[]; selectedIds?: Set<string> }>(),
+  { selectedIds: () => new Set<string>() }
+)
 const emit = defineEmits<{
   open: [card: Card]
   'update:selectedIds': [ids: Set<string>]

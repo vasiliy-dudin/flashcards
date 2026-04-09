@@ -111,7 +111,10 @@ const COLUMN_DEFS: Record<TableColumnId, ColumnDef> = {
 
 type SortDir = 'asc' | 'desc'
 
-const props = defineProps<{ cards: Card[]; selectedIds: Set<string> }>()
+const props = withDefaults(
+  defineProps<{ cards: Card[]; selectedIds?: Set<string> }>(),
+  { selectedIds: () => new Set<string>() }
+)
 const { cards } = props
 const emit = defineEmits<{
   open: [card: Card]
