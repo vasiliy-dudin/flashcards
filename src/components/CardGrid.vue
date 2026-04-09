@@ -1,6 +1,6 @@
 <template>
   <p v-if="cards.length === 0" class="card-grid__empty">No cards here yet.</p>
-  <ul v-else class="card-grid">
+  <ul v-else class="card-grid" :class="{ 'has-selection': selectedIds.size > 0 }">
     <li
       v-for="card in cards"
       :key="card.id"
@@ -12,7 +12,7 @@
         <input
           type="checkbox"
           :checked="selectedIds.has(card.id)"
-          @change="onCheckboxChange(card)"
+          @click.stop="onCheckboxClick(card, $event)"
         />
       </label>
       <CardItem :card="card" />
@@ -54,9 +54,13 @@ function rangeSelect(anchorId: string, targetId: string): Set<string> {
   return next
 }
 
-function onCheckboxChange(card: Card): void {
-  lastSelectedId.value = card.id
-  emit('update:selectedIds', toggle(props.selectedIds, card.id))
+function onCheckboxClick(card: Card, event: MouseEvent): void {
+  if (event.shiftKey && lastSelectedId.value) {
+    emit('update:selectedIds', rangeSelect(lastSelectedId.value, card.id))
+  } else {
+    lastSelectedId.value = card.id
+    emit('update:selectedIds', toggle(props.selectedIds, card.id))
+  }
 }
 
 function onItemClick(card: Card, event: MouseEvent): void {
@@ -80,6 +84,8 @@ function onItemClick(card: Card, event: MouseEvent): void {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   align-items: stretch;
   gap: var(--space-4);
+  padding-top: var(--space-2);
+  padding-left: var(--space-2);
 }
 
 .card-grid__item {
@@ -94,20 +100,39 @@ function onItemClick(card: Card, event: MouseEvent): void {
 }
 
 .card-grid__checkbox {
+  --_size: 32px;
   position: absolute;
-  top: var(--space-2);
-  left: var(--space-2);
+  top: calc(-1 * var(--space-2));
+  left: calc(-1 * var(--space-2));
   z-index: 1;
+  width: var(--_size);
+  height: var(--_size);
+  border-radius: 50%;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: var(--space-1);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
 
   input[type='checkbox'] {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     cursor: pointer;
     accent-color: var(--color-primary);
+    margin: 0;
   }
 }
+
+// Show on hover of this card
+.card-grid__item:hover .card-grid__checkbox { opacity: 1; }
+
+// Always show when this card is selected
+.card-grid__item.is-selected .card-grid__checkbox { opacity: 1; }
+
+// When any card is selected, show all checkboxes
+.card-grid.has-selection .card-grid__checkbox { opacity: 1; }
 
 .card-grid__empty {
   font-size: var(--font-size-sm);
