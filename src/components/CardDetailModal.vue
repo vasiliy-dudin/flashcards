@@ -20,9 +20,12 @@
             </ul>
           </section>
 
-          <div v-if="card.tags.length > 0" class="card-detail__tags">
-            <span v-for="tag in card.tags" :key="tag" class="card-detail__tag">{{ tag }}</span>
-          </div>
+          <section v-if="card.tags.length > 0" class="card-detail__section">
+            <h3 class="card-detail__section-title">Tags</h3>
+            <div class="card-detail__tags">
+              <span v-for="tag in card.tags" :key="tag" class="card-detail__tag">{{ tag }}</span>
+            </div>
+          </section>
 
           <p v-if="card.dictionary.transcription" class="card-detail__transcription">
             {{ card.dictionary.transcription }}
