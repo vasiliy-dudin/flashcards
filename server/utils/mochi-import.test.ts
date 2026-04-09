@@ -110,4 +110,45 @@ describe('mochiCardToCard', () => {
     const card = mochiCardToCard(SAMPLE_CARD_NO_REVIEWS, 'deck-1', 'card-2', TODAY)
     expect(card.tags).toEqual([])
   })
+
+  it('returns empty definition when fields contain only the word key', () => {
+    const card = mochiCardToCard({
+      '~:name': 'word-only',
+      '~:fields': {
+        '~:name': { '~:id': '~:name', '~:value': 'word-only' },
+      },
+      '~:deck-id': 'deck-1',
+    }, 'deck-1', 'card-1', TODAY)
+    expect(card.definition).toBe('')
+  })
+
+  it('skips empty definition fields and picks first non-empty one', () => {
+    const card = mochiCardToCard({
+      '~:name': 'tenacity',
+      '~:fields': {
+        '~:name':     { '~:id': '~:name',     '~:value': 'tenacity' },
+        '~:HmvUUHZu': { '~:id': '~:HmvUUHZu', '~:value': '' },
+        '~:SkjKVjf7': { '~:id': '~:SkjKVjf7', '~:value': 'firm persistence' },
+      },
+      '~:deck-id': 'deck-1',
+    }, 'deck-1', 'card-1', TODAY)
+    expect(card.definition).toBe('firm persistence')
+  })
+
+  it('uses fallback interval=1 when ~:interval is missing on all reviews', () => {
+    const card = mochiCardToCard({
+      '~:name': 'laconic',
+      '~:fields': {
+        '~:name':     { '~:id': '~:name',     '~:value': 'laconic' },
+        '~:SkjKVjf7': { '~:id': '~:SkjKVjf7', '~:value': 'brief and concise' },
+      },
+      '~:reviews': [
+        { '~:date': '~t1704067200000', '~:remembered?': true },
+        { '~:date': '~t1704153600000', '~:remembered?': false },
+      ],
+      '~:deck-id': 'deck-1',
+    }, 'deck-1', 'card-1', TODAY)
+    expect(card.interval).toBe(1)
+    expect(card.dueDate).toBe(TODAY)
+  })
 })
