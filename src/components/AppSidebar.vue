@@ -13,7 +13,12 @@
     </div>
 
     <section class="sidebar__section">
-      <router-link to="/" class="sidebar__nav-item"><IconReview />Review</router-link>
+      <router-link to="/" class="sidebar__nav-item">
+        <IconReview />Review
+        <span v-if="inboxTotalCount > 0" class="sidebar__count">
+          {{ inboxDueCount }} of {{ inboxTotalCount }}
+        </span>
+      </router-link>
     </section>
 
     <section class="sidebar__section">
@@ -90,8 +95,10 @@ import { storeToRefs } from 'pinia'
 import { useDecksStore } from '../stores/decks'
 import { useTagsStore } from '../stores/tags'
 import { useCardsStore } from '../stores/cards'
+import { useSettingsStore } from '../stores/settings'
 import type { Card } from '../types'
 import { renameDeck, deleteDeck } from '../api/decks'
+import { buildReviewQueue } from '../utils/buildReviewQueue'
 import CreateDeckModal from './CreateDeckModal.vue'
 import DeckItem from './DeckItem.vue'
 import RenameDeckModal from './RenameDeckModal.vue'
@@ -128,6 +135,16 @@ const cardsStore = useCardsStore()
 const { decks } = storeToRefs(decksStore)
 const { tags } = storeToRefs(useTagsStore())
 const { cards } = storeToRefs(cardsStore)
+const { settings } = storeToRefs(useSettingsStore())
+
+const TODAY = new Date().toISOString().slice(0, 10)
+
+const inboxDueCount = computed(() =>
+  buildReviewQueue(cards.value, TODAY, settings.value).length
+)
+const inboxTotalCount = computed(() =>
+  cards.value.filter(c => c.inReview).length
+)
 
 const deckNameById = computed(() => new Map(decks.value.map(d => [d.id, d.name])))
 
