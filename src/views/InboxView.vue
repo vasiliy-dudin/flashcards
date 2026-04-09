@@ -5,6 +5,14 @@
       <span v-if="totalCount > 0" class="inbox__progress">
         {{ reviewedCount }} / {{ totalCount }}
       </span>
+      <label class="inbox__autoplay-toggle">
+        <input
+          type="checkbox"
+          :checked="settingsStore.settings.autoPlayAudio"
+          @change="toggleAutoPlay"
+        />
+        Auto-play
+      </label>
     </header>
 
     <p v-if="persistError" class="inbox__persist-error">{{ persistError }}</p>
@@ -36,6 +44,17 @@
             </p>
           </div>
         </div>
+      </div>
+
+      <div class="inbox__controls">
+        <button
+          v-if="currentCard.audioUrl"
+          class="inbox__play-btn"
+          aria-label="Play pronunciation"
+          @click.stop="playAudio"
+        >
+          ▶ Play
+        </button>
       </div>
 
       <div v-if="isFlipped" class="inbox__actions">
@@ -75,8 +94,22 @@ onMounted(() => {
   totalCount.value = due.length
 })
 
+function playAudio(): void {
+  const url = currentCard.value?.audioUrl
+  if (!url) return
+  new Audio(url).play().catch(err => {
+    console.error('[InboxView] Audio playback failed:', currentCard.value?.word, err)
+  })
+}
+
+function toggleAutoPlay(): void {
+  settingsStore.updateSettings({ autoPlayAudio: !settingsStore.settings.autoPlayAudio })
+}
+
 function flipCard(): void {
-  if (!isFlipped.value) isFlipped.value = true
+  if (isFlipped.value) return
+  isFlipped.value = true
+  if (settingsStore.settings.autoPlayAudio) playAudio()
 }
 
 async function submitReview(result: ReviewResult): Promise<void> {
@@ -223,6 +256,39 @@ async function submitReview(result: ReviewResult): Promise<void> {
 .inbox__hint {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+}
+
+.inbox__autoplay-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.inbox__controls {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  justify-content: center;
+  min-height: 36px;
+}
+
+.inbox__play-btn {
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  &:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
 }
 
 .inbox__persist-error {

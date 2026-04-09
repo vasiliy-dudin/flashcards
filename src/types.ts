@@ -60,6 +60,8 @@ export interface SettingsConfig {
   theme: Theme
   /** Columns visible in table view */
   enabledTableColumns: TableColumnId[]
+  /** Automatically play audio when a card is revealed during review */
+  autoPlayAudio: boolean
 }
 
 export const DEFAULT_SETTINGS: SettingsConfig = {
@@ -74,4 +76,5 @@ export const DEFAULT_SETTINGS: SettingsConfig = {
   showTranslation: true,
   theme: 'light',
   enabledTableColumns: [...ALL_TABLE_COLUMNS],
+  autoPlayAudio: false,
 }
