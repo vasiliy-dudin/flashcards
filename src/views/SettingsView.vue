@@ -3,6 +3,26 @@
     <h2 class="settings-view__title">Settings</h2>
 
     <section class="settings-section">
+      <h3 class="settings-section__title">Appearance</h3>
+
+      <div class="settings-field">
+        <span class="settings-field__label">Theme</span>
+        <div class="segmented-control">
+          <button
+            class="segmented-control__btn"
+            :class="{ 'is-active': settings.theme === 'dark' }"
+            @click="update('theme', 'dark')"
+          >Dark</button>
+          <button
+            class="segmented-control__btn"
+            :class="{ 'is-active': settings.theme === 'light' }"
+            @click="update('theme', 'light')"
+          >Light</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="settings-section">
       <h3 class="settings-section__title">Algorithm</h3>
 
       <div class="settings-row settings-row--inputs">
@@ -312,6 +332,35 @@ function onMaxIntervalChange(raw: string): void {
   color: var(--color-text-muted);
   line-height: var(--line-height-base);
   max-width: 460px;
+}
+
+// Segmented control
+.segmented-control {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.segmented-control__btn {
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background-color: var(--color-surface-2);
+    color: var(--color-text);
+  }
+
+  &.is-active {
+    background-color: var(--color-surface-2);
+    color: var(--color-primary);
+  }
 }
 
 // Toggle switch

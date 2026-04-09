@@ -64,6 +64,21 @@
   --z-index-dropdown: 10;
 }
 
+// --- Light theme overrides ---
+[data-theme="light"] {
+  --color-bg:           #f5f6fa;
+  --color-surface:      #ffffff;
+  --color-surface-2:    #e8eaf0;
+  --color-border:       #d0d3e0;
+  --color-text:         #1a1d27;
+  --color-text-muted:   #5a6080;
+  --color-primary:      #4a6ee0;
+  --color-primary-hover:#3558c8;
+  --color-overlay:      rgba(0, 0, 0, 0.35);
+  --shadow-sm:          0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md:          0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 // SASS variable aliases — these map CSS custom properties to SASS variables so
 // component <style lang="scss"> blocks can reference tokens without string literals.
 // WARNING: these variables resolve to var(--token) strings, not bare values.

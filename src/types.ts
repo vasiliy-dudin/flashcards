@@ -35,6 +35,8 @@ export interface Tag {
   cardCount: number
 }
 
+export type Theme = 'dark' | 'light'
+
 export interface SettingsConfig {
   rememberMultiplier: number
   forgetMultiplier: number
@@ -48,6 +50,8 @@ export interface SettingsConfig {
   aiPrompt: string
   /** Show card definitions (translations) in grid/table card views */
   showTranslation: boolean
+  /** UI color scheme */
+  theme: Theme
 }
 
 export const DEFAULT_SETTINGS: SettingsConfig = {
@@ -60,4 +64,5 @@ export const DEFAULT_SETTINGS: SettingsConfig = {
   limitNewCardsPerDay: 5,
   aiPrompt: '',
   showTranslation: true,
+  theme: 'light',
 }
