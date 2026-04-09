@@ -1,7 +1,7 @@
 <template>
   <li class="deck-item" ref="itemEl">
     <router-link :to="`/deck/${deck.id}`" class="deck-item__link">
-      {{ deck.name }}
+      <IconDecks /><span>{{ deck.name }}</span>
     </router-link>
     <button
       class="deck-item__actions-btn"
@@ -20,6 +20,7 @@
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue'
 import type { Deck } from '../types'
+import IconDecks from './icons/IconDecks.vue'
 
 defineProps<{ deck: Deck }>()
 const emit = defineEmits<{
@@ -77,6 +78,7 @@ onUnmounted(() => document.removeEventListener('click', onDocumentClick))
   flex: 1;
   display: flex;
   align-items: center;
+  gap: var(--space-2);
   padding: var(--space-2) calc(var(--space-2) + 28px) var(--space-2) var(--space-4);
   font-size: var(--font-size-sm);
   color: var(--color-text);

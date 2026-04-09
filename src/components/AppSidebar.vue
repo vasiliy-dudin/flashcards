@@ -13,7 +13,7 @@
     </div>
 
     <section class="sidebar__section">
-      <router-link to="/" class="sidebar__nav-item">Inbox</router-link>
+      <router-link to="/" class="sidebar__nav-item"><IconReview />Review</router-link>
     </section>
 
     <section class="sidebar__section">
@@ -61,7 +61,7 @@
             class="sidebar__nav-item sidebar__tag-item"
             :style="{ paddingLeft: `calc(var(--space-4) * ${BASE_INDENT_LEVELS + node.depth})` }"
           >
-            <span>{{ node.label }}</span>
+            <IconTags class="sidebar__icon" /><span>{{ node.label }}</span>
             <span class="sidebar__count">{{ node.cardCount }}</span>
           </router-link>
         </li>
@@ -70,7 +70,7 @@
     </section>
 
     <div class="sidebar__footer">
-      <router-link to="/settings" class="sidebar__nav-item">Settings</router-link>
+      <router-link to="/settings" class="sidebar__nav-item"><IconSettings />Settings</router-link>
     </div>
 
     <CardDetailModal
@@ -97,6 +97,10 @@ import DeckItem from './DeckItem.vue'
 import RenameDeckModal from './RenameDeckModal.vue'
 import SearchInput from './SearchInput.vue'
 import CardDetailModal from './CardDetailModal.vue'
+import IconReview from './icons/IconReview.vue'
+import IconDecks from './icons/IconDecks.vue'
+import IconTags from './icons/IconTags.vue'
+import IconSettings from './icons/IconSettings.vue'
 
 interface TagTreeNode {
   path: string
@@ -263,6 +267,10 @@ nav {
   color: var(--color-text-muted);
 }
 
+.sidebar__section {
+  margin-top: var(--space-4);
+}
+
 .sidebar__section-header {
   display: flex;
   align-items: center;
@@ -316,7 +324,7 @@ nav {
 .sidebar__nav-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-2);
   padding: var(--space-2) var(--space-4);
   font-size: var(--font-size-sm);
   color: var(--color-text);
@@ -334,6 +342,7 @@ nav {
 }
 
 .sidebar__count {
+  margin-left: auto;
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   background-color: var(--color-surface-2);
