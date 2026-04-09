@@ -24,6 +24,7 @@
       <table class="card-table">
         <thead>
           <tr>
+            <th class="card-table__th card-table__th--checkbox"></th>
             <template v-for="colDef in enabledColumnDefs" :key="colDef.id">
               <th v-if="colDef.id === 'transcription'" class="card-table__th card-table__th--audio"></th>
               <th
@@ -40,7 +41,20 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="card in sortedCards" :key="card.id" class="card-table__row" @click="emit('open', card)">
+          <tr
+            v-for="card in sortedCards"
+            :key="card.id"
+            class="card-table__row"
+            :class="{ 'is-selected': selectedIds.has(card.id) }"
+            @click="onRowClick(card, $event)"
+          >
+            <td class="card-table__td card-table__td--checkbox" @click.stop>
+              <input
+                type="checkbox"
+                :checked="selectedIds.has(card.id)"
+                @change="onCheckboxChange(card)"
+              />
+            </td>
             <template v-for="colDef in enabledColumnDefs" :key="colDef.id">
               <td v-if="colDef.id === 'transcription'" class="card-table__td card-table__td--audio">
                 <button
@@ -97,8 +111,12 @@ const COLUMN_DEFS: Record<TableColumnId, ColumnDef> = {
 
 type SortDir = 'asc' | 'desc'
 
-const { cards } = defineProps<{ cards: Card[] }>()
-const emit = defineEmits<{ open: [card: Card] }>()
+const props = defineProps<{ cards: Card[]; selectedIds: Set<string> }>()
+const { cards } = props
+const emit = defineEmits<{
+  open: [card: Card]
+  'update:selectedIds': [ids: Set<string>]
+}>()
 
 const settingsStore = useSettingsStore()
 
@@ -167,6 +185,44 @@ const sortedCards = computed<Card[]>(() =>
     return sortDir.value === 'asc' ? cmp : -cmp
   })
 )
+
+const lastSelectedId = ref<string | null>(null)
+
+function toggleSelection(set: Set<string>, id: string): Set<string> {
+  const next = new Set(set)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  return next
+}
+
+function rangeSelect(anchorId: string, targetId: string): Set<string> {
+  const ids = sortedCards.value.map(c => c.id)
+  const from = ids.indexOf(anchorId)
+  const to = ids.indexOf(targetId)
+  if (from === -1 || to === -1) return new Set(props.selectedIds)
+  const [lo, hi] = from < to ? [from, to] : [to, from]
+  const next = new Set(props.selectedIds)
+  ids.slice(lo, hi + 1).forEach((id: string) => next.add(id))
+  return next
+}
+
+function onCheckboxChange(card: Card): void {
+  lastSelectedId.value = card.id
+  emit('update:selectedIds', toggleSelection(props.selectedIds, card.id))
+}
+
+function onRowClick(card: Card, event: MouseEvent): void {
+  if (event.ctrlKey || event.metaKey) {
+    lastSelectedId.value = card.id
+    emit('update:selectedIds', toggleSelection(props.selectedIds, card.id))
+    return
+  }
+  if (event.shiftKey && lastSelectedId.value) {
+    emit('update:selectedIds', rangeSelect(lastSelectedId.value, card.id))
+    return
+  }
+  emit('open', card)
+}
 
 function getCellText(card: Card, id: TableColumnId): string {
   switch (id) {
@@ -258,6 +314,24 @@ function playAudio(card: Card): void {
   &.is-future {
     color: var(--color-text-muted);
   }
+}
+
+.card-table__th--checkbox,
+.card-table__td--checkbox {
+  width: 36px;
+  padding: 0 var(--space-2);
+  text-align: center;
+
+  input[type='checkbox'] {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+  }
+}
+
+.card-table__row.is-selected {
+  background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
 .card-table__th--audio,

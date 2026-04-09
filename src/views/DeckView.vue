@@ -40,8 +40,27 @@
 
     <p class="deck-view__count">{{ filteredCards.length }} card{{ filteredCards.length !== 1 ? 's' : '' }}</p>
 
-    <CardGrid v-if="viewMode === 'grid'" :cards="filteredCards" @open="selectedCard = $event" />
-    <CardTable v-else :cards="filteredCards" @open="selectedCard = $event" />
+    <div v-if="selectedIds.size > 0" class="deck-view__bulk-toolbar">
+      <span class="deck-view__bulk-count">{{ selectedIds.size }} selected</span>
+      <button class="deck-view__bulk-btn" :disabled="isBulkLoading" @click="bulkSendToReview">Send to review</button>
+      <button class="deck-view__bulk-btn" :disabled="isBulkLoading" @click="bulkRemoveFromReview">Remove from review</button>
+      <button class="deck-view__bulk-btn" :disabled="isBulkLoading" @click="bulkResetProgress">Reset progress</button>
+      <button class="deck-view__bulk-btn deck-view__bulk-btn--danger" :disabled="isBulkLoading" @click="bulkDelete">Delete</button>
+      <button class="deck-view__bulk-btn" @click="selectedIds = new Set()">Clear</button>
+    </div>
+
+    <CardGrid
+      v-if="viewMode === 'grid'"
+      :cards="filteredCards"
+      v-model:selectedIds="selectedIds"
+      @open="selectedCard = $event"
+    />
+    <CardTable
+      v-else
+      :cards="filteredCards"
+      v-model:selectedIds="selectedIds"
+      @open="selectedCard = $event"
+    />
 
     <AddCardModal v-if="showAddModal" v-model="showAddModal" :deck-id="deckId" />
     <CardDetailModal v-if="selectedCard" :model-value="true" :card="selectedCard" @update:model-value="selectedCard = null" @card-updated="selectedCard = $event" />
@@ -49,14 +68,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { Card } from '../types'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { useCardsStore } from '../stores/cards'
 import { useDecksStore } from '../stores/decks'
+import { useTagsStore } from '../stores/tags'
 import { useUiStore } from '../stores/ui'
 import { useSettingsStore } from '../stores/settings'
+import { updateCard as updateCardApi, deleteCard as deleteCardApi } from '../api/cards'
 import CardGrid from '../components/CardGrid.vue'
 import CardTable from '../components/CardTable.vue'
 import AddCardModal from '../components/AddCardModal.vue'
@@ -72,6 +93,7 @@ const deckId = computed<string>(() => {
 
 const decksStore = useDecksStore()
 const cardsStore = useCardsStore()
+const tagsStore = useTagsStore()
 const uiStore = useUiStore()
 const settingsStore = useSettingsStore()
 const { viewMode } = storeToRefs(uiStore)
@@ -93,6 +115,58 @@ const selectedTags = ref<string[]>([])
 const tagsOpen = ref(false)
 const showAddModal = ref(false)
 const selectedCard = ref<Card | null>(null)
+const selectedIds = ref<Set<string>>(new Set())
+
+watch(filteredCards, () => { selectedIds.value = new Set() })
+
+const isBulkLoading = ref(false)
+
+async function bulkUpdate(patch: Partial<Card>): Promise<void> {
+  if (isBulkLoading.value) return
+  isBulkLoading.value = true
+  const ids = [...selectedIds.value]
+  try {
+    await Promise.all(ids.map(id => updateCardApi(id, patch)))
+    ids.forEach(id => cardsStore.updateCard(id, patch))
+    selectedIds.value = new Set()
+  } catch (err) {
+    console.error('[DeckView] Bulk update failed:', err)
+  } finally {
+    isBulkLoading.value = false
+  }
+}
+
+async function bulkDelete(): Promise<void> {
+  if (isBulkLoading.value) return
+  isBulkLoading.value = true
+  const ids = [...selectedIds.value]
+  const toDelete = ids.map(id => cardsStore.getCardById(id)).filter((c): c is Card => c !== undefined)
+  try {
+    await Promise.all(ids.map(id => deleteCardApi(id)))
+    toDelete.forEach(card => {
+      card.tags.forEach(tag => tagsStore.decrementTag(tag))
+      cardsStore.removeCard(card.id)
+    })
+    selectedIds.value = new Set()
+  } catch (err) {
+    console.error('[DeckView] Bulk delete failed:', err)
+  } finally {
+    isBulkLoading.value = false
+  }
+}
+
+function bulkSendToReview(): Promise<void> {
+  return bulkUpdate({ inReview: true })
+}
+
+function bulkRemoveFromReview(): Promise<void> {
+  return bulkUpdate({ inReview: false })
+}
+
+function bulkResetProgress(): Promise<void> {
+  const today = new Date().toISOString().slice(0, 10)
+  return bulkUpdate({ interval: 1, dueDate: today })
+}
 
 function cardMatchesTags(cardTags: string[]): boolean {
   if (selectedTags.value.length === 0) return true
@@ -254,5 +328,50 @@ const filteredCards = computed(() =>
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   font-style: italic;
+}
+
+.deck-view__bulk-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.deck-view__bulk-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-right: var(--space-2);
+}
+
+.deck-view__bulk-btn {
+  padding: var(--space-1) var(--space-3);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &--danger {
+    &:hover:not(:disabled) {
+      color: var(--color-danger);
+      border-color: var(--color-danger);
+    }
+  }
 }
 </style>

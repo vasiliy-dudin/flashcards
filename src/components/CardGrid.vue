@@ -1,18 +1,73 @@
 <template>
   <p v-if="cards.length === 0" class="card-grid__empty">No cards here yet.</p>
   <ul v-else class="card-grid">
-    <li v-for="card in cards" :key="card.id">
-      <CardItem :card="card" @open="emit('open', $event)" />
+    <li
+      v-for="card in cards"
+      :key="card.id"
+      class="card-grid__item"
+      :class="{ 'is-selected': selectedIds.has(card.id) }"
+      @click="onItemClick(card, $event)"
+    >
+      <label class="card-grid__checkbox" @click.stop>
+        <input
+          type="checkbox"
+          :checked="selectedIds.has(card.id)"
+          @change="onCheckboxChange(card)"
+        />
+      </label>
+      <CardItem :card="card" />
     </li>
   </ul>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import CardItem from './CardItem.vue'
 import type { Card } from '../types'
 
-defineProps<{ cards: Card[] }>()
-const emit = defineEmits<{ open: [card: Card] }>()
+const props = defineProps<{ cards: Card[]; selectedIds: Set<string> }>()
+const emit = defineEmits<{
+  open: [card: Card]
+  'update:selectedIds': [ids: Set<string>]
+}>()
+
+const lastSelectedId = ref<string | null>(null)
+
+function toggle(set: Set<string>, id: string): Set<string> {
+  const next = new Set(set)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  return next
+}
+
+function rangeSelect(anchorId: string, targetId: string): Set<string> {
+  const ids = props.cards.map(c => c.id)
+  const from = ids.indexOf(anchorId)
+  const to = ids.indexOf(targetId)
+  if (from === -1 || to === -1) return new Set(props.selectedIds)
+  const [lo, hi] = from < to ? [from, to] : [to, from]
+  const next = new Set(props.selectedIds)
+  ids.slice(lo, hi + 1).forEach(id => next.add(id))
+  return next
+}
+
+function onCheckboxChange(card: Card): void {
+  lastSelectedId.value = card.id
+  emit('update:selectedIds', toggle(props.selectedIds, card.id))
+}
+
+function onItemClick(card: Card, event: MouseEvent): void {
+  if (event.ctrlKey || event.metaKey) {
+    lastSelectedId.value = card.id
+    emit('update:selectedIds', toggle(props.selectedIds, card.id))
+    return
+  }
+  if (event.shiftKey && lastSelectedId.value) {
+    emit('update:selectedIds', rangeSelect(lastSelectedId.value, card.id))
+    return
+  }
+  emit('open', card)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -22,9 +77,32 @@ const emit = defineEmits<{ open: [card: Card] }>()
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   align-items: stretch;
   gap: var(--space-4);
+}
 
-  li {
-    height: 100%;
+.card-grid__item {
+  position: relative;
+  height: 100%;
+  cursor: pointer;
+
+  &.is-selected > :last-child {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 0;
+  }
+}
+
+.card-grid__checkbox {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 1;
+  cursor: pointer;
+  padding: var(--space-1);
+
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--color-primary);
   }
 }
 
