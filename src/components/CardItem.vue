@@ -71,6 +71,8 @@ function playAudio(): void {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  height: 100%;
+  overflow: hidden;
   transition: border-color var(--transition-fast);
   cursor: pointer;
 
@@ -90,6 +92,9 @@ function playAudio(): void {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
   color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .card-item__badge {

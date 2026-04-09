@@ -20,7 +20,12 @@ const emit = defineEmits<{ open: [card: Card] }>()
   list-style: none;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  align-items: stretch;
   gap: var(--space-4);
+
+  li {
+    height: 100%;
+  }
 }
 
 .card-grid__empty {
