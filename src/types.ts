@@ -37,6 +37,10 @@ export interface Tag {
 
 export type Theme = 'dark' | 'light'
 
+export type TableColumnId = 'word' | 'translation' | 'transcription' | 'tags' | 'interval' | 'dueDate' | 'createdAt'
+
+export const ALL_TABLE_COLUMNS: TableColumnId[] = ['word', 'translation', 'transcription', 'tags', 'interval', 'dueDate', 'createdAt']
+
 export interface SettingsConfig {
   rememberMultiplier: number
   forgetMultiplier: number
@@ -52,6 +56,8 @@ export interface SettingsConfig {
   showTranslation: boolean
   /** UI color scheme */
   theme: Theme
+  /** Columns visible in table view */
+  enabledTableColumns: TableColumnId[]
 }
 
 export const DEFAULT_SETTINGS: SettingsConfig = {
@@ -65,4 +71,5 @@ export const DEFAULT_SETTINGS: SettingsConfig = {
   aiPrompt: '',
   showTranslation: true,
   theme: 'light',
+  enabledTableColumns: [...ALL_TABLE_COLUMNS],
 }
