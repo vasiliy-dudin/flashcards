@@ -166,16 +166,57 @@
         />
       </label>
     </section>
+
+    <section class="settings-section">
+      <h3 class="settings-section__title">Import</h3>
+
+      <div class="settings-field">
+        <div>
+          <p class="settings-toggle-field__name">Mochi Cards</p>
+          <p class="settings-toggle-field__desc">Import decks and cards from a Mochi Cards <code>.zip</code> or <code>.mochi</code> export file.</p>
+        </div>
+        <button class="settings-import-btn" @click="showImportModal = true">Import…</button>
+      </div>
+    </section>
   </main>
+
+  <ImportMochiModal
+    v-if="showImportModal"
+    v-model="showImportModal"
+    @imported="onImported"
+  />
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSettingsStore } from '../stores/settings'
+import { useCardsStore } from '../stores/cards'
+import { useDecksStore } from '../stores/decks'
+import { useTagsStore } from '../stores/tags'
+import { fetchAllCards } from '../api/cards'
+import { fetchAllDecks } from '../api/decks'
+import { fetchAllTags } from '../api/tags'
 import type { SettingsConfig } from '../types'
+import type { MochiImportResult } from '../api/import'
+import ImportMochiModal from '../components/ImportMochiModal.vue'
 
 const settingsStore = useSettingsStore()
+const cardsStore = useCardsStore()
+const decksStore = useDecksStore()
+const tagsStore = useTagsStore()
 const { settings } = storeToRefs(settingsStore)
+
+const showImportModal = ref(false)
+
+async function onImported(_result: MochiImportResult): Promise<void> {
+  const [freshCards, freshDecks, freshTags] = await Promise.all([
+    fetchAllCards(), fetchAllDecks(), fetchAllTags(),
+  ])
+  cardsStore.setCards(freshCards)
+  decksStore.setDecks(freshDecks)
+  tagsStore.setTags(freshTags)
+}
 
 function update<K extends keyof SettingsConfig>(key: K, value: SettingsConfig[K]): void {
   settingsStore.updateSettings({ [key]: value } as Pick<SettingsConfig, K>)
@@ -359,6 +400,25 @@ function onMaxIntervalChange(raw: string): void {
 
   &.is-active {
     background-color: var(--color-surface-2);
+    color: var(--color-primary);
+  }
+}
+
+.settings-import-btn {
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 0;
+
+  &:hover {
+    border-color: var(--color-primary);
     color: var(--color-primary);
   }
 }
