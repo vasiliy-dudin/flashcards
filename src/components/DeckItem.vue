@@ -37,7 +37,9 @@ function toggleMenu(): void {
 
 function openMenu(): void {
   menuOpen.value = true
-  document.addEventListener('click', onDocumentClick)
+  setTimeout(() => {
+    document.addEventListener('click', onDocumentClick)
+  }, 0)
 }
 
 function closeMenu(): void {
@@ -46,7 +48,9 @@ function closeMenu(): void {
 }
 
 function onDocumentClick(e: MouseEvent): void {
-  if (!itemEl.value?.contains(e.target as Node)) closeMenu()
+  if (itemEl.value && !itemEl.value.contains(e.target as Node)) {
+    closeMenu()
+  }
 }
 
 function handleRename(): void {

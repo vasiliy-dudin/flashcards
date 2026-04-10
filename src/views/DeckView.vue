@@ -25,11 +25,11 @@
         title="Show archived cards"
         @click="showArchived = !showArchived"
       >Archived</button>
-      <div class="tag-filter">
+      <div class="tag-filter" ref="tagFilterEl">
         <button
           class="tag-filter__toggle"
           :class="{ 'has-selection': selectedTags.length > 0 }"
-          @click="tagsOpen = !tagsOpen"
+          @click="toggleTagsPanel"
         >
           Tags{{ selectedTags.length > 0 ? ` (${selectedTags.length})` : '' }}
           {{ tagsOpen ? '▲' : '▼' }}
@@ -124,6 +124,7 @@ const showAddModal = ref(false)
 const selectedCard = ref<Card | null>(null)
 const selectedIds = ref<Set<string>>(new Set())
 const isBulkLoading = ref(false)
+const tagFilterEl = ref<HTMLElement | null>(null)
 
 async function bulkUpdate(patch: Partial<Card>): Promise<void> {
   if (isBulkLoading.value) return
@@ -190,6 +191,28 @@ const filteredCards = computed(() =>
 )
 
 watch(filteredCards, () => { selectedIds.value = new Set() })
+
+function onTagsFilterDocumentClick(e: MouseEvent): void {
+  if (tagFilterEl.value && !tagFilterEl.value.contains(e.target as Node)) {
+    closeTagsPanel()
+  }
+}
+
+function openTagsPanel(): void {
+  tagsOpen.value = true
+  setTimeout(() => {
+    document.addEventListener('click', onTagsFilterDocumentClick)
+  }, 0)
+}
+
+function closeTagsPanel(): void {
+  tagsOpen.value = false
+  document.removeEventListener('click', onTagsFilterDocumentClick)
+}
+
+function toggleTagsPanel(): void {
+  tagsOpen.value ? closeTagsPanel() : openTagsPanel()
+}
 </script>
 
 <style lang="scss" scoped>

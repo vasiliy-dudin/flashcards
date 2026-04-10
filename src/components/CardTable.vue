@@ -134,12 +134,16 @@ const pickerOpen = ref(false)
 const pickerEl = ref<HTMLElement | null>(null)
 
 function onDocumentClick(e: MouseEvent): void {
-  if (!pickerEl.value?.contains(e.target as Node)) pickerOpen.value = false
+  if (pickerEl.value && !pickerEl.value.contains(e.target as Node)) {
+    pickerOpen.value = false
+  }
 }
 
 function openPicker(): void {
   pickerOpen.value = true
-  document.addEventListener('click', onDocumentClick)
+  setTimeout(() => {
+    document.addEventListener('click', onDocumentClick)
+  }, 0)
 }
 
 function closePicker(): void {

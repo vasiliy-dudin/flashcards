@@ -109,12 +109,16 @@ const isUpdating = ref(false)
 const isDeleting = ref(false)
 
 function onDocumentClick(e: MouseEvent): void {
-  if (!menuEl.value?.contains(e.target as Node)) closeMenu()
+  if (menuEl.value && !menuEl.value.contains(e.target as Node)) {
+    closeMenu()
+  }
 }
 
 function openMenu(): void {
   menuOpen.value = true
-  document.addEventListener('click', onDocumentClick)
+  setTimeout(() => {
+    document.addEventListener('click', onDocumentClick)
+  }, 0)
 }
 
 function closeMenu(): void {

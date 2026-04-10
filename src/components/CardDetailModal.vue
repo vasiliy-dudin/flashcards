@@ -133,12 +133,16 @@ const actionsMenuOpen = ref(false)
 const actionsMenuEl = ref<HTMLElement | null>(null)
 
 function onActionsMenuDocumentClick(e: MouseEvent): void {
-  if (!actionsMenuEl.value?.contains(e.target as Node)) closeActionsMenu()
+  if (actionsMenuEl.value && !actionsMenuEl.value.contains(e.target as Node)) {
+    closeActionsMenu()
+  }
 }
 
 function openActionsMenu(): void {
   actionsMenuOpen.value = true
-  document.addEventListener('click', onActionsMenuDocumentClick)
+  setTimeout(() => {
+    document.addEventListener('click', onActionsMenuDocumentClick)
+  }, 0)
 }
 
 function closeActionsMenu(): void {
