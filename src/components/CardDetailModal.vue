@@ -79,6 +79,11 @@
                     :disabled="isUpdating"
                     @click="onMenuResetProgress"
                   >Reset progress</button>
+                  <button
+                    class="card-detail__menu-item"
+                    :disabled="isUpdating"
+                    @click="onMenuToggleArchive"
+                  >{{ card.archived ? 'Unarchive' : 'Archive' }}</button>
                   <hr class="card-detail__menu-divider" />
                   <button
                     class="card-detail__menu-item card-detail__menu-item--danger"
@@ -155,6 +160,11 @@ function onMenuResetProgress(): void {
   resetProgress()
 }
 
+function onMenuToggleArchive(): void {
+  closeActionsMenu()
+  toggleArchive()
+}
+
 function onMenuDelete(): void {
   closeActionsMenu()
   showDeleteConfirm.value = true
@@ -199,6 +209,20 @@ async function resetProgress(): Promise<void> {
     emit('card-updated', updated)
   } catch (err) {
     console.error('[CardDetailModal] resetProgress failed:', props.card.id, err)
+  } finally {
+    isUpdating.value = false
+  }
+}
+
+async function toggleArchive(): Promise<void> {
+  if (isUpdating.value) return
+  isUpdating.value = true
+  try {
+    const updated = await updateCardApi(props.card.id, { archived: !props.card.archived })
+    cardsStore.updateCard(props.card.id, { archived: updated.archived })
+    emit('card-updated', updated)
+  } catch (err) {
+    console.error('[CardDetailModal] toggleArchive failed:', props.card.id, err)
   } finally {
     isUpdating.value = false
   }

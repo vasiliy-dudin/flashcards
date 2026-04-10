@@ -19,6 +19,12 @@
 
     <div class="deck-view__filters">
       <SearchInput v-model="searchText" placeholder="Search cards…" />
+      <button
+        class="btn-icon"
+        :class="{ 'is-active': showArchived }"
+        title="Show archived cards"
+        @click="showArchived = !showArchived"
+      >Archived</button>
       <div class="tag-filter">
         <button
           class="tag-filter__toggle"
@@ -113,6 +119,7 @@ const availableTags = computed<string[]>(() => {
 const searchText = ref('')
 const selectedTags = ref<string[]>([])
 const tagsOpen = ref(false)
+const showArchived = ref(false)
 const showAddModal = ref(false)
 const selectedCard = ref<Card | null>(null)
 const selectedIds = ref<Set<string>>(new Set())
@@ -174,6 +181,7 @@ function cardMatchesTags(cardTags: string[]): boolean {
 
 const filteredCards = computed(() =>
   deckCards.value.filter(card => {
+    if (card.archived !== showArchived.value) return false
     const matchesText =
       searchText.value === '' ||
       card.word.toLowerCase().includes(searchText.value.toLowerCase())

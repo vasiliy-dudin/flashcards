@@ -8,7 +8,7 @@ type CardInsert = typeof cards.$inferInsert
 
 const REQUIRED_FIELDS = [
   'id', 'word', 'definition', 'examples', 'dictionary', 'aiExample',
-  'deckId', 'tags', 'interval', 'dueDate', 'createdAt', 'inReview',
+  'deckId', 'tags', 'interval', 'dueDate', 'createdAt', 'inReview', 'archived',
 ] as const
 
 function isCardBody(value: unknown): value is CardInsert {

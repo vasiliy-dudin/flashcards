@@ -21,11 +21,15 @@ export const db = drizzle(sqlite, { schema })
 
 migrate(db, { migrationsFolder: MIGRATIONS_DIR })
 
-// Self-healing: add in_review column if the migration was skipped on an existing DB
+// Self-healing: add missing columns if migrations were skipped on an existing DB
 const columns = sqlite.prepare("PRAGMA table_info('cards')").all() as Array<{ name: string }>
 if (!columns.some(c => c.name === 'in_review')) {
   sqlite.prepare("ALTER TABLE cards ADD COLUMN in_review INTEGER NOT NULL DEFAULT 0").run()
   console.log('[db] Applied in_review column via startup patch')
+}
+if (!columns.some(c => c.name === 'archived')) {
+  sqlite.prepare("ALTER TABLE cards ADD COLUMN archived INTEGER NOT NULL DEFAULT 0").run()
+  console.log('[db] Applied archived column via startup patch')
 }
 
 console.log('[db] Migrations applied, database ready')

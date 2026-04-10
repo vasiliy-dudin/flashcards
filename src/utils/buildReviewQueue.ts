@@ -9,7 +9,7 @@ function isNewCard(card: Card): boolean {
 /** Filters and sorts cards into the review queue based on current settings. */
 export function buildReviewQueue(cards: Card[], today: string, config: QueueConfig): Card[] {
   let due = [...cards]
-    .filter(c => c.inReview && c.dueDate <= today)
+    .filter(c => c.inReview && !c.archived && c.dueDate <= today)
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
 
   if (config.retireCards) {

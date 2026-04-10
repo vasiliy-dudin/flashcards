@@ -44,6 +44,11 @@
                 :disabled="isUpdating"
                 @click="onMenuResetProgress"
               >Reset progress</button>
+              <button
+                class="card-item__dropdown-item"
+                :disabled="isUpdating"
+                @click="onMenuToggleArchive"
+              >{{ card.archived ? 'Unarchive' : 'Archive' }}</button>
               <hr class="card-item__dropdown-divider" />
               <button
                 class="card-item__dropdown-item card-item__dropdown-item--danger"
@@ -170,9 +175,27 @@ function onMenuResetProgress(): void {
   resetProgress()
 }
 
+function onMenuToggleArchive(): void {
+  closeMenu()
+  toggleArchive()
+}
+
 function onMenuDelete(): void {
   closeMenu()
   showDeleteConfirm.value = true
+}
+
+async function toggleArchive(): Promise<void> {
+  if (isUpdating.value) return
+  isUpdating.value = true
+  try {
+    await updateCardApi(card.id, { archived: !card.archived })
+    cardsStore.updateCard(card.id, { archived: !card.archived })
+  } catch (err) {
+    console.error('[CardItem] toggleArchive failed:', card.id, err)
+  } finally {
+    isUpdating.value = false
+  }
 }
 
 onUnmounted(() => closeMenu())

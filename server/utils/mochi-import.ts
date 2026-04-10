@@ -117,5 +117,6 @@ export function mochiCardToCard(
     dueDate,
     createdAt,
     inReview: true,
+    archived: false,
   }
 }

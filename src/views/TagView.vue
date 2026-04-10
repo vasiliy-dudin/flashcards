@@ -15,6 +15,12 @@
 
     <div class="tag-view__filters">
       <SearchInput v-model="searchText" placeholder="Search cards…" />
+      <button
+        class="btn-icon"
+        :class="{ 'is-active': showArchived }"
+        title="Show archived cards"
+        @click="showArchived = !showArchived"
+      >Archived</button>
     </div>
 
     <p class="tag-view__count">
@@ -66,6 +72,7 @@ const settingsStore = useSettingsStore()
 const { viewMode } = storeToRefs(uiStore)
 
 const searchText = ref('')
+const showArchived = ref(false)
 const selectedCard = ref<Card | null>(null)
 const selectedIds = ref<Set<string>>(new Set())
 const isBulkLoading = ref(false)
@@ -117,9 +124,11 @@ const tagCards = computed(() =>
 )
 
 const filteredCards = computed(() => {
-  if (searchText.value === '') return tagCards.value
   const q = searchText.value.toLowerCase()
-  return tagCards.value.filter(c => c.word.toLowerCase().includes(q))
+  return tagCards.value.filter(c => {
+    if (c.archived !== showArchived.value) return false
+    return q === '' || c.word.toLowerCase().includes(q)
+  })
 })
 </script>
 

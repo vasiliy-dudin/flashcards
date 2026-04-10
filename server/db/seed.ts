@@ -18,7 +18,7 @@ const SEED_CARDS: CardInsert[] = [
     dictionary: { transcription: '/ɪˈfem.ər.əl/', meanings: ['Lasting for a very short time', 'Existing only briefly; transitory'] },
     aiExample: 'The ephemeral nature of fashion means that trends rarely last more than a season.',
     audioUrl: null, deckId: 'd1', tags: ['formal', 'grammar'],
-    interval: 3, dueDate: '2026-04-05', createdAt: '2026-03-01', inReview: false,
+    interval: 3, dueDate: '2026-04-05', createdAt: '2026-03-01', inReview: false, archived: false,
   },
   {
     id: 'c2', word: 'set off',
@@ -27,7 +27,7 @@ const SEED_CARDS: CardInsert[] = [
     dictionary: { transcription: '/ˌset ˈɒf/', meanings: ['To begin a journey', 'To cause something to start or happen', 'To make an alarm or bomb activate'] },
     aiExample: 'They set off at dawn to reach the summit before the afternoon storms.',
     audioUrl: null, deckId: 'd2', tags: ['phrasal-verbs', 'phrasal-verbs/motion'],
-    interval: 7, dueDate: '2026-04-07', createdAt: '2026-03-15', inReview: false,
+    interval: 7, dueDate: '2026-04-07', createdAt: '2026-03-15', inReview: false, archived: false,
   },
   {
     id: 'c3', word: 'meticulous',
@@ -36,7 +36,7 @@ const SEED_CARDS: CardInsert[] = [
     dictionary: { transcription: '/məˈtɪk.jʊ.ləs/', meanings: ['Showing great care and attention to detail', 'Very precise and thorough'] },
     aiExample: 'The meticulous researcher checked every source before drawing any conclusions.',
     audioUrl: null, deckId: 'd1', tags: ['formal'],
-    interval: 14, dueDate: '2026-04-21', createdAt: '2026-03-10', inReview: false,
+    interval: 14, dueDate: '2026-04-21', createdAt: '2026-03-10', inReview: false, archived: false,
   },
   {
     id: 'c4', word: 'put up with',
@@ -45,7 +45,7 @@ const SEED_CARDS: CardInsert[] = [
     dictionary: { transcription: '/ˌpʊt ˈʌp wɪð/', meanings: ['To tolerate something unpleasant', 'To accept a difficult situation without complaint'] },
     aiExample: "She could no longer put up with the constant interruptions during her work calls.",
     audioUrl: null, deckId: 'd2', tags: ['phrasal-verbs'],
-    interval: 5, dueDate: '2026-04-12', createdAt: '2026-03-20', inReview: false,
+    interval: 5, dueDate: '2026-04-12', createdAt: '2026-03-20', inReview: false, archived: false,
   },
   {
     id: 'c5', word: 'ubiquitous',
@@ -54,7 +54,7 @@ const SEED_CARDS: CardInsert[] = [
     dictionary: { transcription: '/juːˈbɪk.wɪ.təs/', meanings: ['Present or found everywhere', 'Seeming to appear in all places at once'] },
     aiExample: 'Coffee shops have become ubiquitous in every major city across the country.',
     audioUrl: null, deckId: 'd1', tags: ['formal'],
-    interval: 1, dueDate: '2026-04-06', createdAt: '2026-04-01', inReview: false,
+    interval: 1, dueDate: '2026-04-06', createdAt: '2026-04-01', inReview: false, archived: false,
   },
 ]
 

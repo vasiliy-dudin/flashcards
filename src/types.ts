@@ -22,6 +22,8 @@ export interface Card {
   createdAt: string
   /** Whether the card has been manually enrolled in the review queue */
   inReview: boolean
+  /** Whether the card has been archived (excluded from review queue) */
+  archived: boolean
 }
 
 export interface Deck {

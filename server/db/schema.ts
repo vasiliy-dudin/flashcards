@@ -20,6 +20,8 @@ export const cards = sqliteTable('cards', {
   createdAt:   text('created_at').notNull(),
   /** 1 = enrolled in review queue, 0 = not enrolled */
   inReview:    integer('in_review', { mode: 'boolean' }).notNull().default(false),
+  /** 1 = archived (excluded from review), 0 = active */
+  archived:    integer('archived', { mode: 'boolean' }).notNull().default(false),
 })
 
 export const decks = sqliteTable('decks', {

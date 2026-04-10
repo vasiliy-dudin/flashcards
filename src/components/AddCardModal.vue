@@ -189,6 +189,8 @@ async function handleSubmit(): Promise<void> {
       interval: 1,
       dueDate: today,
       createdAt: today,
+      inReview: false,
+      archived: false,
     }
     const saved = await createCard(card)
     cardsStore.addCard(saved)
