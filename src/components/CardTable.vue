@@ -115,7 +115,6 @@ const props = withDefaults(
   defineProps<{ cards: Card[]; selectedIds?: Set<string> }>(),
   { selectedIds: () => new Set<string>() }
 )
-const { cards } = props
 const emit = defineEmits<{
   open: [card: Card]
   'update:selectedIds': [ids: Set<string>]
@@ -183,7 +182,7 @@ function compareCards(a: Card, b: Card, key: TableColumnId): number {
 }
 
 const sortedCards = computed<Card[]>(() =>
-  [...cards].sort((a, b) => {
+  [...props.cards].sort((a, b) => {
     const cmp = compareCards(a, b, sortKey.value)
     return sortDir.value === 'asc' ? cmp : -cmp
   })
