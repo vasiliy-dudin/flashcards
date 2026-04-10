@@ -105,7 +105,6 @@ import RenameDeckModal from './RenameDeckModal.vue'
 import SearchInput from './SearchInput.vue'
 import CardDetailModal from './CardDetailModal.vue'
 import IconReview from './icons/IconReview.vue'
-import IconDecks from './icons/IconDecks.vue'
 import IconTags from './icons/IconTags.vue'
 import IconSettings from './icons/IconSettings.vue'
 
@@ -137,10 +136,8 @@ const { tags } = storeToRefs(useTagsStore())
 const { cards } = storeToRefs(cardsStore)
 const { settings } = storeToRefs(useSettingsStore())
 
-const TODAY = new Date().toISOString().slice(0, 10)
-
 const inboxDueCount = computed(() =>
-  buildReviewQueue(cards.value, TODAY, settings.value).length
+  buildReviewQueue(cards.value, new Date().toISOString().slice(0, 10), settings.value).length
 )
 const inboxTotalCount = computed(() =>
   cards.value.filter(c => c.inReview).length

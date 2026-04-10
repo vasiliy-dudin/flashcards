@@ -122,7 +122,7 @@ async function submitReview(result: ReviewResult): Promise<void> {
   try {
     await updateCardApi(card.id, patch)
     cardsStore.updateCard(card.id, patch)
-    queue.value.shift()
+    queue.value = queue.value.slice(1)
     isFlipped.value = false
   } catch (err) {
     persistError.value = 'Could not save your review. Please try again.'

@@ -135,6 +135,16 @@ describe('mochiCardToCard', () => {
     expect(card.definition).toBe('firm persistence')
   })
 
+  it('sets inReview to true for all imported cards', () => {
+    const card = mochiCardToCard(SAMPLE_CARD_WITH_REVIEWS, 'deck-1', 'card-1', TODAY)
+    expect(card.inReview).toBe(true)
+  })
+
+  it('sets inReview to true even for cards with no reviews', () => {
+    const card = mochiCardToCard(SAMPLE_CARD_NO_REVIEWS, 'deck-1', 'card-2', TODAY)
+    expect(card.inReview).toBe(true)
+  })
+
   it('uses fallback interval=1 when ~:interval is missing on all reviews', () => {
     const card = mochiCardToCard({
       '~:name': 'laconic',

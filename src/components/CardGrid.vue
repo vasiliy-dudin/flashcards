@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import CardItem from './CardItem.vue'
 import type { Card } from '../types'
 
@@ -35,6 +35,10 @@ const emit = defineEmits<{
 }>()
 
 const lastSelectedId = ref<string | null>(null)
+
+watch(() => props.selectedIds.size, (size) => {
+  if (size === 0) lastSelectedId.value = null
+})
 
 function toggle(set: Set<string>, id: string): Set<string> {
   const next = new Set(set)

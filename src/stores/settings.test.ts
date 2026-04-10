@@ -48,6 +48,19 @@ describe('useSettingsStore', () => {
     expect(store.settings).toEqual(DEFAULT_SETTINGS)
   })
 
+  it('autoPlayAudio defaults to false', () => {
+    const store = useSettingsStore()
+    expect(store.settings.autoPlayAudio).toBe(false)
+  })
+
+  it('autoPlayAudio can be toggled via updateSettings', () => {
+    const store = useSettingsStore()
+    store.updateSettings({ autoPlayAudio: true })
+    expect(store.settings.autoPlayAudio).toBe(true)
+    store.updateSettings({ autoPlayAudio: false })
+    expect(store.settings.autoPlayAudio).toBe(false)
+  })
+
   it('new fields added to DEFAULT_SETTINGS get their default value even if absent in stored JSON', () => {
     // Simulate an old stored object missing a new field
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ rememberMultiplier: 2.0 }))
