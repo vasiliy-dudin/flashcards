@@ -27,6 +27,12 @@
             </div>
           </section>
 
+          <div v-if="card.audioUrl" class="card-detail__audio">
+            <button class="card-detail__play-btn" aria-label="Play pronunciation" @click="playAudio">
+              ▶ Play pronunciation
+            </button>
+          </div>
+
           <p v-if="card.dictionary.transcription" class="card-detail__transcription">
             {{ card.dictionary.transcription }}
           </p>
@@ -62,11 +68,6 @@
               <div class="card-detail__actions-menu" ref="actionsMenuEl">
                 <button class="card-detail__actions-btn" @click="toggleActionsMenu">Actions ▾</button>
                 <div v-if="actionsMenuOpen" class="card-detail__actions-dropdown">
-                  <button
-                    v-if="card.audioUrl"
-                    class="card-detail__menu-item"
-                    @click="onMenuPlayAudio"
-                  >▶ Play audio</button>
                   <button
                     class="card-detail__menu-item"
                     :disabled="isUpdating"
@@ -142,11 +143,6 @@ function closeActionsMenu(): void {
 
 function toggleActionsMenu(): void {
   actionsMenuOpen.value ? closeActionsMenu() : openActionsMenu()
-}
-
-function onMenuPlayAudio(): void {
-  playAudio()
-  closeActionsMenu()
 }
 
 function onMenuToggleReview(): void {
@@ -303,6 +299,29 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+}
+
+.card-detail__audio {
+  display: flex;
+}
+
+.card-detail__play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
 }
 
 .card-detail__transcription {
