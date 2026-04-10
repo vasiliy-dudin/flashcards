@@ -3,5 +3,6 @@ dist/
 *.local
 .DS_Store
 
-# SQLite database file (data lives on each instance)
+# Runtime data (DB, audio, secrets) — lives on each instance
 data/
+!data/.env.example

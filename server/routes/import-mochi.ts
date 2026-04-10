@@ -6,6 +6,7 @@ import { db } from '../db/index.js'
 import { cards, decks } from '../db/schema.js'
 import { mochiCardToCard } from '../utils/mochi-import.js'
 import type { MochiData, MochiCard } from '../utils/mochi-import.js'
+import { generateAudio } from '../services/tts.js'
 
 const DATA_JSON_FILENAME = 'data.json'
 
@@ -43,21 +44,26 @@ function getOrCreateDeck(deckName: string): string {
   })
 }
 
-function insertCard(mochiCard: MochiCard, deckId: string, today: string): 'imported' | 'skipped' {
+interface InsertedCard {
+  id: string
+  word: string
+}
+
+function insertCard(mochiCard: MochiCard, deckId: string, today: string): InsertedCard | null {
   const duplicate = db.select({ id: cards.id })
     .from(cards)
     .where(and(eq(cards.word, mochiCard['~:name']), eq(cards.deckId, deckId)))
     .all()
 
-  if (duplicate.length > 0) return 'skipped'
+  if (duplicate.length > 0) return null
 
   const card = mochiCardToCard(mochiCard, deckId, randomUUID(), today)
   try {
     db.insert(cards).values(card).run()
-    return 'imported'
+    return { id: card.id, word: card.word }
   } catch (err) {
     console.error('[import-mochi] Card insert failed:', mochiCard['~:name'], err)
-    return 'skipped'
+    return null
   }
 }
 
@@ -88,6 +94,7 @@ app.post('/', async (c) => {
   let imported = 0
   let skipped = 0
   const today = todayIso()
+  const insertedCards: InsertedCard[] = []
 
   for (const mochiDeck of mochiData['~:decks']) {
     const deckId = getOrCreateDeck(mochiDeck['~:name'])
@@ -95,9 +102,25 @@ app.post('/', async (c) => {
 
     for (const mochiCard of mochiCards) {
       const result = insertCard(mochiCard, deckId, today)
-      if (result === 'imported') imported++
-      else skipped++
+      if (result !== null) {
+        insertedCards.push(result)
+        imported++
+      } else {
+        skipped++
+      }
     }
+  }
+
+  for (const card of insertedCards) {
+    generateAudio(card.word).then((result) => {
+      if ('degraded' in result) {
+        console.error(`[import-mochi] Background audio failed for "${card.word}":`, result.error)
+      } else {
+        db.update(cards).set({ audioUrl: result.audioUrl }).where(eq(cards.id, card.id)).run()
+      }
+    }).catch((err: unknown) => {
+      console.error('[import-mochi] Background audio threw:', err)
+    })
   }
 
   return c.json({ imported, skipped })

@@ -9,6 +9,7 @@ import tagsRoute from './routes/tags.js'
 import generateCardContent from './routes/generate-card-content.js'
 import generateAudio from './routes/generate-audio.js'
 import importMochi from './routes/import-mochi.js'
+import audioBackfill from './routes/audio-backfill.js'
 
 const PORT = 3000
 
@@ -23,6 +24,7 @@ app.route('/api/tags', tagsRoute)
 app.route('/api/generate-card-content', generateCardContent)
 app.route('/api/generate-audio', generateAudio)
 app.route('/api/import/mochi', importMochi)
+app.route('/api/audio/backfill', audioBackfill)
 
 if (process.env.NODE_ENV !== 'production') {
   seedDevData()

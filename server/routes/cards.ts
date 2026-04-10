@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { cards } from '../db/schema.js'
+import { generateAudio } from '../services/tts.js'
 
 type CardInsert = typeof cards.$inferInsert
 
@@ -33,6 +34,17 @@ app.post('/', async (c) => {
   }
   try {
     const [row] = db.insert(cards).values(body).returning().all()
+    if (!row.audioUrl) {
+      generateAudio(row.word).then((result) => {
+        if ('degraded' in result) {
+          console.error(`[cards] Background audio failed for "${row.word}":`, result.error)
+        } else {
+          db.update(cards).set({ audioUrl: result.audioUrl }).where(eq(cards.id, row.id)).run()
+        }
+      }).catch((err: unknown) => {
+        console.error('[cards] Background audio threw:', err)
+      })
+    }
     return c.json(row, 201)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
