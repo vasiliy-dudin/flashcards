@@ -65,13 +65,10 @@ const SEED_TAGS: TagInsert[] = [
   { name: 'phrasal-verbs/motion', cardCount: 1 },
 ]
 
-/** Inserts dev fixtures into SQLite. No-ops if decks are already present. */
+/** Inserts dev fixtures into SQLite. Idempotent — safe to call on every startup. */
 export function seedDevData(): void {
-  const existing = db.select().from(decks).all()
-  if (existing.length > 0) return
-
-  db.insert(decks).values(SEED_DECKS).run()
-  db.insert(cards).values(SEED_CARDS).run()
-  db.insert(tags).values(SEED_TAGS).run()
+  db.insert(decks).values(SEED_DECKS).onConflictDoNothing().run()
+  db.insert(cards).values(SEED_CARDS).onConflictDoNothing().run()
+  db.insert(tags).values(SEED_TAGS).onConflictDoNothing().run()
   console.log('[db] Dev seed inserted')
 }
