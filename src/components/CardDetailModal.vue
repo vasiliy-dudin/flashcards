@@ -49,42 +49,42 @@
             <span>Due: {{ formatDate(card.dueDate) }}</span>
             <span>Interval: {{ card.interval }}d</span>
           </div>
-          <button
-            v-if="card.audioUrl"
-            class="card-detail__audio-btn"
-            aria-label="Play pronunciation"
-            @click="playAudio"
-          >
-            ▶ Play
-          </button>
-          <div class="card-detail__review-actions">
-            <button
-              class="card-detail__review-btn"
-              :disabled="isUpdating"
-              @click="toggleReview"
-            >
-              {{ card.inReview ? 'Remove from review' : 'Send to review' }}
-            </button>
-            <button
-              v-if="card.inReview"
-              class="card-detail__reset-btn"
-              :disabled="isUpdating"
-              @click="resetProgress"
-            >
-              Reset progress
-            </button>
-          </div>
-          <div class="card-detail__actions">
-            <template v-if="!showDeleteConfirm">
-              <button class="card-detail__edit-btn" @click="showEditModal = true">Edit</button>
-              <button class="card-detail__delete-btn" @click="showDeleteConfirm = true">Delete</button>
-            </template>
-            <template v-else>
+          <div class="card-detail__footer-actions">
+            <template v-if="showDeleteConfirm">
               <span class="card-detail__confirm-text">Delete this card?</span>
               <button class="card-detail__confirm-cancel" @click="showDeleteConfirm = false">Cancel</button>
               <button class="card-detail__confirm-delete" :disabled="isDeleting" @click="handleDelete">
                 {{ isDeleting ? 'Deleting…' : 'Confirm' }}
               </button>
+            </template>
+            <template v-else>
+              <button class="card-detail__edit-btn" @click="showEditModal = true">Edit</button>
+              <div class="card-detail__actions-menu" ref="actionsMenuEl">
+                <button class="card-detail__actions-btn" @click="toggleActionsMenu">Actions ▾</button>
+                <div v-if="actionsMenuOpen" class="card-detail__actions-dropdown">
+                  <button
+                    v-if="card.audioUrl"
+                    class="card-detail__menu-item"
+                    @click="onMenuPlayAudio"
+                  >▶ Play audio</button>
+                  <button
+                    class="card-detail__menu-item"
+                    :disabled="isUpdating"
+                    @click="onMenuToggleReview"
+                  >{{ card.inReview ? 'Remove from review' : 'Send to review' }}</button>
+                  <button
+                    v-if="card.inReview"
+                    class="card-detail__menu-item"
+                    :disabled="isUpdating"
+                    @click="onMenuResetProgress"
+                  >Reset progress</button>
+                  <hr class="card-detail__menu-divider" />
+                  <button
+                    class="card-detail__menu-item card-detail__menu-item--danger"
+                    @click="onMenuDelete"
+                  >Delete</button>
+                </div>
+              </div>
             </template>
           </div>
         </footer>
@@ -122,6 +122,47 @@ const showEditModal = ref(false)
 const showDeleteConfirm = ref(false)
 const isDeleting = ref(false)
 const isUpdating = ref(false)
+
+const actionsMenuOpen = ref(false)
+const actionsMenuEl = ref<HTMLElement | null>(null)
+
+function onActionsMenuDocumentClick(e: MouseEvent): void {
+  if (!actionsMenuEl.value?.contains(e.target as Node)) closeActionsMenu()
+}
+
+function openActionsMenu(): void {
+  actionsMenuOpen.value = true
+  document.addEventListener('click', onActionsMenuDocumentClick)
+}
+
+function closeActionsMenu(): void {
+  actionsMenuOpen.value = false
+  document.removeEventListener('click', onActionsMenuDocumentClick)
+}
+
+function toggleActionsMenu(): void {
+  actionsMenuOpen.value ? closeActionsMenu() : openActionsMenu()
+}
+
+function onMenuPlayAudio(): void {
+  playAudio()
+  closeActionsMenu()
+}
+
+function onMenuToggleReview(): void {
+  closeActionsMenu()
+  toggleReview()
+}
+
+function onMenuResetProgress(): void {
+  closeActionsMenu()
+  resetProgress()
+}
+
+function onMenuDelete(): void {
+  closeActionsMenu()
+  showDeleteConfirm.value = true
+}
 
 function close(): void {
   emit('update:modelValue', false)
@@ -198,7 +239,10 @@ function handleKeydown(e: KeyboardEvent): void {
 }
 
 onMounted(() => document.addEventListener('keydown', handleKeydown))
-onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+  closeActionsMenu()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -304,7 +348,6 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  flex-wrap: wrap;
 }
 
 .card-detail__tags {
@@ -328,29 +371,7 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
   color: var(--color-text-muted);
 }
 
-.card-detail__review-actions {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.card-detail__review-btn,
-.card-detail__reset-btn {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  border: 1px solid var(--color-border);
-  background-color: var(--color-surface-2);
-  color: var(--color-text-muted);
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-  &:hover:not(:disabled) {
-    color: var(--color-primary);
-    border-color: var(--color-primary);
-  }
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
-}
-
-.card-detail__actions {
+.card-detail__footer-actions {
   margin-left: auto;
   display: flex;
   align-items: center;
@@ -363,8 +384,7 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
 }
 
 .card-detail__confirm-cancel,
-.card-detail__confirm-delete,
-.card-detail__delete-btn {
+.card-detail__confirm-delete {
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
@@ -380,7 +400,6 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
   &:hover:not(:disabled) { filter: brightness(1.2); }
 }
 
-.card-detail__delete-btn,
 .card-detail__confirm-delete {
   background-color: color-mix(in srgb, var(--color-danger) 10%, transparent);
   color: var(--color-danger);
@@ -403,7 +422,11 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
   }
 }
 
-.card-detail__audio-btn {
+.card-detail__actions-menu {
+  position: relative;
+}
+
+.card-detail__actions-btn {
   padding: var(--space-2) var(--space-3);
   background-color: var(--color-surface-2);
   border: 1px solid var(--color-border);
@@ -413,8 +436,51 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
   cursor: pointer;
   transition: color var(--transition-fast), border-color var(--transition-fast);
   &:hover {
-    color: var(--color-primary);
+    color: var(--color-text);
     border-color: var(--color-primary);
   }
+}
+
+.card-detail__actions-dropdown {
+  position: absolute;
+  bottom: calc(100% + var(--space-1));
+  right: 0;
+  z-index: var(--z-index-dropdown);
+  min-width: 180px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-1);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-detail__menu-item {
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  &:hover:not(:disabled) { background-color: var(--color-surface-2); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  &--danger {
+    color: var(--color-danger);
+    &:hover:not(:disabled) {
+      background-color: color-mix(in srgb, var(--color-danger) 10%, transparent);
+    }
+  }
+}
+
+.card-detail__menu-divider {
+  margin: var(--space-1) 0;
+  border: none;
+  border-top: 1px solid var(--color-border);
 }
 </style>
