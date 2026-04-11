@@ -11,6 +11,7 @@
     "test:run": "vitest run",
     "typecheck": "vue-tsc --noEmit",
     "server:dev": "tsx watch --env-file=data/.env server/index.ts",
+    "server:start": "NODE_ENV=production tsx --env-file=data/.env server/index.ts",
     "dev:all": "concurrently -n frontend,backend -c cyan,yellow \"pnpm dev\" \"pnpm server:dev\""
   },
   "keywords": [],
