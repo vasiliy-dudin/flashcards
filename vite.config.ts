@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       // Forward /api/* requests to the Node backend during development
-      '/api': 'http://localhost:3000',
+      '/api': 'http://localhost:3030',
     },
   },
   test: {

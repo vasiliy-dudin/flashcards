@@ -14,7 +14,7 @@ import importMochi from './routes/import-mochi.js'
 import audioBackfill from './routes/audio-backfill.js'
 import authRoute from './routes/auth.js'
 
-const PORT = 3000
+const PORT = 3030
 const ENCRYPTION_KEY_LENGTH = 32
 
 type SessionData = { authenticated: boolean }
