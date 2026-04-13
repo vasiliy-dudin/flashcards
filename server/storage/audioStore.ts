@@ -1,9 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join, resolve } from 'node:path'
 
-// Resolved relative to this file so the path is stable regardless of CWD
-const AUDIO_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../../public/audio')
+// Resolved relative to CWD — server must be started from the repo root (see package.json server:start)
+const AUDIO_DIR = resolve(process.cwd(), 'data/audio')
 const AUDIO_URL_PREFIX = '/audio'
 
 /** Saves base64-encoded MP3 data to disk and returns its public URL path. */

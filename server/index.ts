@@ -1,4 +1,5 @@
 import { serve } from '@hono/node-server'
+import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { sessionMiddleware, CookieStore } from 'hono-sessions'
@@ -60,6 +61,9 @@ app.use('/api/*', async (c, next) => {
   }
   return next()
 })
+
+// Audio files are served publicly; filenames are UUIDs so enumeration is impractical
+app.use('/audio/*', serveStatic({ root: 'data' }))
 
 app.route('/api/cards', cardsRoute)
 app.route('/api/decks', decksRoute)
