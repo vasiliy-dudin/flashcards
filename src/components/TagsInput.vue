@@ -116,8 +116,8 @@ function selectSuggestion(suggestion: string): void {
   if (!props.modelValue.includes(suggestion)) {
     emit('update:modelValue', [...props.modelValue, suggestion])
   }
-  draft.value = ''
   activeIndex.value = -1
+  inputRef.value?.blur()
 }
 
 function removeTag(tag: string): void {
