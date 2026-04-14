@@ -42,8 +42,8 @@
       <div v-if="deletingDeckId !== null" class="sidebar__delete-confirm">
         <span>Delete "{{ decksStore.getDeckById(deletingDeckId)?.name }}"?</span>
         <div class="sidebar__delete-confirm-actions">
-          <button class="sidebar__delete-confirm-btn sidebar__delete-confirm-btn--yes" @click="handleDeleteConfirm">Yes</button>
-          <button class="sidebar__delete-confirm-btn" @click="deletingDeckId = null">Cancel</button>
+          <AppButton variant="secondary" size="sm" @click="deletingDeckId = null">Cancel</AppButton>
+          <AppButton variant="danger-subtle" size="sm" @click="handleDeleteConfirm">Yes</AppButton>
         </div>
       </div>
       <p v-if="deleteError" class="sidebar__error">{{ deleteError }}</p>
@@ -107,6 +107,7 @@ import CardDetailModal from './CardDetailModal.vue'
 import IconReview from './icons/IconReview.vue'
 import IconTags from './icons/IconTags.vue'
 import IconSettings from './icons/IconSettings.vue'
+import AppButton from './AppButton.vue'
 
 interface TagTreeNode {
   path: string
@@ -393,21 +394,5 @@ nav {
   gap: var(--space-2);
 }
 
-.sidebar__delete-confirm-btn {
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-xs);
-  border: 1px solid var(--color-border);
-  background-color: var(--color-surface-2);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: filter var(--transition-fast);
-  &:hover { filter: brightness(1.2); }
 
-  &--yes {
-    background-color: var(--color-danger);
-    border-color: var(--color-danger);
-    color: #fff;
-  }
-}
 </style>

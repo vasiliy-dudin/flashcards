@@ -47,14 +47,12 @@
       </div>
 
       <div class="inbox__controls">
-        <button
+        <AppButton
           v-if="currentCard.audioUrl"
-          class="inbox__play-btn"
+          variant="ghost-subtle"
           aria-label="Play pronunciation"
           @click.stop="playAudio"
-        >
-          ▶ Play
-        </button>
+        >▶ Play</AppButton>
       </div>
 
       <div v-if="isFlipped" class="inbox__actions">
@@ -275,21 +273,6 @@ async function submitReview(result: ReviewResult): Promise<void> {
   display: flex;
   justify-content: center;
   min-height: 36px;
-}
-
-.inbox__play-btn {
-  padding: var(--space-2) var(--space-4);
-  background-color: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-  &:hover {
-    color: var(--color-primary);
-    border-color: var(--color-primary);
-  }
 }
 
 .inbox__persist-error {

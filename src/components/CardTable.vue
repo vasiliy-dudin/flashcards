@@ -57,12 +57,13 @@
             </td>
             <template v-for="colDef in enabledColumnDefs" :key="colDef.id">
               <td v-if="colDef.id === 'transcription'" class="card-table__td card-table__td--audio">
-                <button
-                  class="card-table__audio-btn"
+                <AppButton
+                  variant="ghost"
+                  size="icon"
                   :disabled="!card.audioUrl"
                   aria-label="Play pronunciation"
                   @click.stop="playAudio(card)"
-                >▶</button>
+                >▶</AppButton>
               </td>
               <td
                 class="card-table__td"
@@ -93,6 +94,7 @@ import { ALL_TABLE_COLUMNS } from '../types'
 import { formatDate } from '../utils/formatDate'
 import { getCardDueStatus } from '../utils/cardStatus'
 import { useSettingsStore } from '../stores/settings'
+import AppButton from './AppButton.vue'
 
 interface ColumnDef {
   id: TableColumnId
@@ -345,29 +347,6 @@ function playAudio(card: Card): void {
   width: 40px;
   padding: 0 var(--space-2);
   text-align: center;
-}
-
-.card-table__audio-btn {
-  --_size: 28px;
-  width: var(--_size);
-  height: var(--_size);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-  cursor: pointer;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-
-  &:hover:not(:disabled) {
-    color: var(--color-primary);
-    border-color: var(--color-primary);
-  }
-
-  &:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
 }
 
 .card-table__empty {

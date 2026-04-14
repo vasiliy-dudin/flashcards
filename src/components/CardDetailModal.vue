@@ -28,9 +28,9 @@
           </section>
 
           <div v-if="card.audioUrl" class="card-detail__audio">
-            <button class="card-detail__play-btn" aria-label="Play pronunciation" @click="playAudio">
+            <AppButton variant="ghost-subtle" aria-label="Play pronunciation" @click="playAudio">
               ▶ Play pronunciation
-            </button>
+            </AppButton>
           </div>
 
           <p v-if="card.dictionary.transcription" class="card-detail__transcription">
@@ -58,15 +58,15 @@
           <div class="card-detail__footer-actions">
             <template v-if="showDeleteConfirm">
               <span class="card-detail__confirm-text">Delete this card?</span>
-              <button class="card-detail__confirm-cancel" @click="showDeleteConfirm = false">Cancel</button>
-              <button class="card-detail__confirm-delete" :disabled="isDeleting" @click="handleDelete">
+              <AppButton variant="secondary" size="sm" @click="showDeleteConfirm = false">Cancel</AppButton>
+              <AppButton variant="danger-subtle" size="sm" :disabled="isDeleting" @click="handleDelete">
                 {{ isDeleting ? 'Deleting…' : 'Confirm' }}
-              </button>
+              </AppButton>
             </template>
             <template v-else>
-              <button class="card-detail__edit-btn" @click="showEditModal = true">Edit</button>
+              <AppButton variant="ghost-subtle" size="sm" @click="showEditModal = true">Edit</AppButton>
               <div class="card-detail__actions-menu" ref="actionsMenuEl">
-                <button class="card-detail__actions-btn" @click="toggleActionsMenu">Actions ▾</button>
+                <AppButton variant="ghost-subtle" size="sm" @click="toggleActionsMenu">Actions ▾</AppButton>
                 <div v-if="actionsMenuOpen" class="card-detail__actions-dropdown">
                   <button
                     class="card-detail__menu-item"
@@ -111,6 +111,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import type { Card } from '../types'
 import { formatDate } from '../utils/formatDate'
 import CardEditModal from './CardEditModal.vue'
+import AppButton from './AppButton.vue'
 import { deleteCard as deleteCardApi, updateCard as updateCardApi } from '../api/cards'
 import { useCardsStore } from '../stores/cards'
 import { useTagsStore } from '../stores/tags'
@@ -333,25 +334,6 @@ onUnmounted(() => {
   display: flex;
 }
 
-.card-detail__play-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  background-color: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-
-  &:hover {
-    color: var(--color-primary);
-    border-color: var(--color-primary);
-  }
-}
-
 .card-detail__transcription {
   font-size: var(--font-size-base);
   color: var(--color-text-muted);
@@ -430,62 +412,8 @@ onUnmounted(() => {
   color: var(--color-text-muted);
 }
 
-.card-detail__confirm-cancel,
-.card-detail__confirm-delete {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  border: 1px solid var(--color-border);
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
-}
-
-.card-detail__confirm-cancel {
-  background-color: var(--color-surface-2);
-  color: var(--color-text-muted);
-  &:hover:not(:disabled) { filter: brightness(1.2); }
-}
-
-.card-detail__confirm-delete {
-  background-color: color-mix(in srgb, var(--color-danger) 10%, transparent);
-  color: var(--color-danger);
-  border-color: transparent;
-  &:hover:not(:disabled) { border-color: var(--color-danger); }
-}
-
-.card-detail__edit-btn {
-  padding: var(--space-2) var(--space-3);
-  background-color: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-  &:hover {
-    color: var(--color-primary);
-    border-color: var(--color-primary);
-  }
-}
-
 .card-detail__actions-menu {
   position: relative;
-}
-
-.card-detail__actions-btn {
-  padding: var(--space-2) var(--space-3);
-  background-color: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-  &:hover {
-    color: var(--color-text);
-    border-color: var(--color-primary);
-  }
 }
 
 .card-detail__actions-dropdown {

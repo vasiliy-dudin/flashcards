@@ -12,10 +12,10 @@
     <footer class="card-item__footer">
       <template v-if="showDeleteConfirm">
         <span class="card-item__confirm-text">Delete this card?</span>
-        <button class="card-item__confirm-cancel" @click.stop="showDeleteConfirm = false">Cancel</button>
-        <button class="card-item__confirm-delete" :disabled="isDeleting" @click.stop="handleDelete">
+        <AppButton variant="secondary" size="sm" @click.stop="showDeleteConfirm = false">Cancel</AppButton>
+        <AppButton variant="danger-subtle" size="sm" :disabled="isDeleting" @click.stop="handleDelete">
           {{ isDeleting ? '…' : 'Confirm' }}
-        </button>
+        </AppButton>
       </template>
       <template v-else>
         <div class="card-item__tags">
@@ -24,14 +24,21 @@
           </span>
         </div>
         <div class="card-item__footer-actions" @click.stop>
-          <button
-            class="card-item__audio-btn"
+          <AppButton
+            variant="ghost"
+            size="icon"
             :disabled="!card.audioUrl"
             aria-label="Play pronunciation"
             @click="playAudio"
-          >▶</button>
+          >▶</AppButton>
           <div class="card-item__menu" ref="menuEl">
-            <button class="card-item__menu-btn" aria-label="Card actions" @click="toggleMenu">⋮</button>
+            <AppButton variant="ghost" size="icon" aria-label="Card actions" @click="toggleMenu">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <circle cx="8" cy="3" r="1.5"/>
+                <circle cx="8" cy="8" r="1.5"/>
+                <circle cx="8" cy="13" r="1.5"/>
+              </svg>
+            </AppButton>
             <div v-if="menuOpen" class="card-item__dropdown">
               <button
                 class="card-item__dropdown-item"
@@ -71,6 +78,7 @@ import { useSettingsStore } from '../stores/settings'
 import { useCardsStore } from '../stores/cards'
 import { useTagsStore } from '../stores/tags'
 import { updateCard as updateCardApi, deleteCard as deleteCardApi } from '../api/cards'
+import AppButton from './AppButton.vue'
 
 interface DueBadge {
   label: string
@@ -303,50 +311,8 @@ onUnmounted(() => closeMenu())
   flex-shrink: 0;
 }
 
-.card-item__audio-btn {
-  --_size: 28px;
-  width: var(--_size);
-  height: var(--_size);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-  cursor: pointer;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-
-  &:hover:not(:disabled) {
-    color: var(--color-primary);
-    border-color: var(--color-primary);
-  }
-
-  &:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-}
-
 .card-item__menu {
   position: relative;
-}
-
-.card-item__menu-btn {
-  --_size: 28px;
-  width: var(--_size);
-  height: var(--_size);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-base);
-  line-height: 1;
-  cursor: pointer;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-
-  &:hover {
-    color: var(--color-text);
-    border-color: var(--color-primary);
-  }
 }
 
 .card-item__dropdown {
@@ -398,27 +364,5 @@ onUnmounted(() => closeMenu())
   flex: 1;
 }
 
-.card-item__confirm-cancel,
-.card-item__confirm-delete {
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-xs);
-  cursor: pointer;
-  border: 1px solid var(--color-border);
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
-}
 
-.card-item__confirm-cancel {
-  background-color: var(--color-surface-2);
-  color: var(--color-text-muted);
-  &:hover:not(:disabled) { filter: brightness(1.2); }
-}
-
-.card-item__confirm-delete {
-  background-color: color-mix(in srgb, var(--color-danger) 10%, transparent);
-  color: var(--color-danger);
-  border-color: transparent;
-  &:hover:not(:disabled) { border-color: var(--color-danger); }
-}
 </style>

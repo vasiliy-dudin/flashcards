@@ -15,8 +15,8 @@
 
 <script setup lang="ts">
 withDefaults(defineProps<{
-  variant?: 'primary' | 'secondary' | 'ghost' | 'ghost-danger' | 'danger' | 'success'
-  size?: 'sm' | 'md' | 'lg'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'ghost-subtle' | 'ghost-danger' | 'danger' | 'danger-subtle' | 'success'
+  size?: 'sm' | 'md' | 'lg' | 'icon'
   active?: boolean
   type?: 'button' | 'submit' | 'reset'
   disabled?: boolean
@@ -49,9 +49,10 @@ withDefaults(defineProps<{
   }
 
   // Sizes
-  &--sm { padding: var(--space-1) var(--space-3); }
-  &--md { padding: var(--space-2) var(--space-4); }
-  &--lg { padding: var(--space-3) var(--space-5); }
+  &--sm   { padding: var(--space-1) var(--space-3); }
+  &--md   { padding: var(--space-2) var(--space-4); }
+  &--lg   { padding: var(--space-3) var(--space-5); }
+  &--icon { width: 28px; height: 28px; padding: 0; font-size: var(--font-size-xs); }
 
   // Variants
   &--primary {
@@ -86,6 +87,18 @@ withDefaults(defineProps<{
     }
   }
 
+  // Ghost with surface-2 background — used for "soft" action buttons (Play, Edit, Actions)
+  &--ghost-subtle {
+    background-color: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+  }
+
   // Ghost with danger hover — used for bulk delete toolbar button
   &--ghost-danger {
     background-color: var(--color-surface);
@@ -104,6 +117,15 @@ withDefaults(defineProps<{
     border: none;
 
     &:hover:not(:disabled) { filter: brightness(1.1); }
+  }
+
+  // Tinted danger — used for inline delete confirm buttons
+  &--danger-subtle {
+    background-color: color-mix(in srgb, var(--color-danger) 10%, transparent);
+    color: var(--color-danger);
+    border: 1px solid transparent;
+
+    &:hover:not(:disabled) { border-color: var(--color-danger); }
   }
 
   &--success {
