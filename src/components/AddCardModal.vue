@@ -79,7 +79,7 @@ import { createCard } from '../api/cards'
 import type { Card, DictionaryEntry } from '../types'
 import TagsInput from './TagsInput.vue'
 
-const props = defineProps<{ modelValue: boolean; deckId: string }>()
+const props = defineProps<{ modelValue: boolean; deckId: string; initialTags?: string[] }>()
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
 
 const cardsStore = useCardsStore()
@@ -91,7 +91,7 @@ const tagSuggestions = computed((): string[] => tagsStore.tags.map(t => t.name))
 const word = ref('')
 const definition = ref('')
 const examples = ref('')
-const tags = ref<string[]>([])
+const tags = ref<string[]>(props.initialTags ? [...props.initialTags] : [])
 const isLoading = ref(false)
 const error = ref('')
 

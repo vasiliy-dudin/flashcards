@@ -10,6 +10,7 @@
           @click="settingsStore.updateSettings({ showTranslation: !settingsStore.settings.showTranslation })"
         >T</button>
         <ViewToggle :model-value="viewMode" @update:model-value="uiStore.setViewMode" />
+        <button class="btn-icon" title="Add card" @click="showAddModal = true">+ Add card</button>
       </div>
     </header>
 
@@ -39,6 +40,7 @@
     <CardGrid v-if="viewMode === 'grid'" :cards="filteredCards" v-model:selectedIds="selectedIds" @open="selectedCard = $event" />
     <CardTable v-else :cards="filteredCards" v-model:selectedIds="selectedIds" @open="selectedCard = $event" />
     <CardDetailModal v-if="selectedCard" :model-value="true" :card="selectedCard" @update:model-value="selectedCard = null" @card-updated="selectedCard = $event" />
+    <AddCardModal v-if="showAddModal" v-model="showAddModal" deck-id="" :initial-tags="[tagName]" />
   </main>
 </template>
 
@@ -54,6 +56,7 @@ import { useSettingsStore } from '../stores/settings'
 import { updateCard as updateCardApi, deleteCard as deleteCardApi } from '../api/cards'
 import CardGrid from '../components/CardGrid.vue'
 import CardTable from '../components/CardTable.vue'
+import AddCardModal from '../components/AddCardModal.vue'
 import CardDetailModal from '../components/CardDetailModal.vue'
 import ViewToggle from '../components/ViewToggle.vue'
 import SearchInput from '../components/SearchInput.vue'
@@ -72,6 +75,7 @@ const settingsStore = useSettingsStore()
 const { viewMode } = storeToRefs(uiStore)
 
 const searchText = ref('')
+const showAddModal = ref(false)
 const showArchived = ref(false)
 const selectedCard = ref<Card | null>(null)
 const selectedIds = ref<Set<string>>(new Set())
