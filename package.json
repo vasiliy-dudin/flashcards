@@ -27,28 +27,26 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.14",
-    "better-sqlite3": "^12.9.0",
-    "drizzle-orm": "^0.45.2",
-    "fflate": "^0.8.2",
-    "hono": "^4.12.12",
-    "hono-sessions": "^0.8.1",
-    "pinia": "^3.0.4",
-    "vite": "^8.0.8",
-    "vitest": "^4.1.4",
-    "vue": "^3.5.32",
-    "vue-router": "^5.0.4"
-  },
-  "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.6.0",
     "@vitejs/plugin-vue": "^6.0.6",
+    "better-sqlite3": "^12.9.0",
     "concurrently": "^9.2.1",
     "drizzle-kit": "^0.31.10",
+    "drizzle-orm": "^0.45.2",
     "fake-indexeddb": "^6.2.5",
+    "fflate": "^0.8.2",
+    "hono": "^4.12.12",
+    "hono-sessions": "^0.8.1",
     "jsdom": "^29.0.2",
+    "pinia": "^3.0.4",
     "sass": "^1.99.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",
+    "vite": "^8.0.8",
+    "vitest": "^4.1.4",
+    "vue": "^3.5.32",
+    "vue-router": "^5.0.4",
     "vue-tsc": "^3.2.6"
   }
 }
