@@ -9,11 +9,11 @@
 
     <p v-if="settingsStore.settings.showTranslation" class="card-item__definition">{{ card.definition }}</p>
 
-    <footer class="card-item__footer" @click.stop>
+    <footer class="card-item__footer">
       <template v-if="showDeleteConfirm">
         <span class="card-item__confirm-text">Delete this card?</span>
-        <button class="card-item__confirm-cancel" @click="showDeleteConfirm = false">Cancel</button>
-        <button class="card-item__confirm-delete" :disabled="isDeleting" @click="handleDelete">
+        <button class="card-item__confirm-cancel" @click.stop="showDeleteConfirm = false">Cancel</button>
+        <button class="card-item__confirm-delete" :disabled="isDeleting" @click.stop="handleDelete">
           {{ isDeleting ? '…' : 'Confirm' }}
         </button>
       </template>
@@ -23,7 +23,7 @@
             {{ leafSegment(tag) }}
           </span>
         </div>
-        <div class="card-item__footer-actions">
+        <div class="card-item__footer-actions" @click.stop>
           <button
             class="card-item__audio-btn"
             :disabled="!card.audioUrl"
