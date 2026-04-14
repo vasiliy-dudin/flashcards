@@ -24,16 +24,10 @@
           <p v-if="error" class="modal__error">{{ error }}</p>
 
           <div class="modal__footer">
-            <button type="button" class="modal__btn modal__btn--cancel" @click="close">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="modal__btn modal__btn--submit"
-              :disabled="isLoading || !name.trim()"
-            >
+            <AppButton variant="secondary" :disabled="isLoading" @click="close">Cancel</AppButton>
+            <AppButton variant="primary" type="submit" :disabled="isLoading || !name.trim()">
               {{ isLoading ? 'Creating…' : 'Create deck' }}
-            </button>
+            </AppButton>
           </div>
         </form>
       </div>
@@ -45,6 +39,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useDecksStore } from '../stores/decks'
 import { createDeck } from '../api/decks'
+import AppButton from './AppButton.vue'
 
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
 
@@ -186,24 +181,4 @@ async function handleSubmit(): Promise<void> {
   gap: var(--space-3);
 }
 
-.modal__btn {
-  padding: var(--space-2) var(--space-5);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  border: none;
-  transition: filter var(--transition-fast), opacity var(--transition-fast);
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
-  &--cancel {
-    background-color: var(--color-surface-2);
-    color: var(--color-text-muted);
-    &:hover:not(:disabled) { filter: brightness(1.2); }
-  }
-  &--submit {
-    background-color: var(--color-primary);
-    color: #fff;
-    &:hover:not(:disabled) { filter: brightness(1.1); }
-  }
-}
 </style>

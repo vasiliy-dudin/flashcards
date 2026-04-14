@@ -58,8 +58,8 @@
       </div>
 
       <div v-if="isFlipped" class="inbox__actions">
-        <button class="btn btn--danger" @click="submitReview('forget')">Forget</button>
-        <button class="btn btn--success" @click="submitReview('remember')">Remember</button>
+        <AppButton variant="danger" size="lg" class="inbox__action-btn" @click="submitReview('forget')">Forget</AppButton>
+        <AppButton variant="success" size="lg" class="inbox__action-btn" @click="submitReview('remember')">Remember</AppButton>
       </div>
       <p v-else class="inbox__hint">Click the card to reveal</p>
     </template>
@@ -69,6 +69,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import type { Card } from '../types'
+import AppButton from '../components/AppButton.vue'
 import { useCardsStore } from '../stores/cards'
 import { useSettingsStore } from '../stores/settings'
 import { scheduleCard, type ReviewResult } from '../utils/scheduler'
@@ -301,32 +302,9 @@ async function submitReview(result: ReviewResult): Promise<void> {
   padding: var(--space-2) var(--space-3);
 }
 
-.btn {
+.inbox__action-btn {
   flex: 1;
-  padding: var(--space-3) var(--space-5);
-  border: none;
-  border-radius: var(--radius-md);
   font-size: var(--font-size-base);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: filter var(--transition-fast);
-
-  &--success {
-    background-color: var(--color-success);
-    color: #fff;
-
-    &:hover {
-      filter: brightness(1.1);
-    }
-  }
-
-  &--danger {
-    background-color: var(--color-danger);
-    color: #fff;
-
-    &:hover {
-      filter: brightness(1.1);
-    }
-  }
+  border-radius: var(--radius-md);
 }
 </style>

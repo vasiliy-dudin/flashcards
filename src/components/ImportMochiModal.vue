@@ -27,17 +27,10 @@
             <p v-if="error" class="modal__error">{{ error }}</p>
 
             <div class="modal__footer">
-              <button type="button" class="modal__btn modal__btn--cancel" :disabled="isLoading" @click="close">
-                Cancel
-              </button>
-              <button
-                type="button"
-                class="modal__btn modal__btn--submit"
-                :disabled="isLoading || selectedFile === null"
-                @click="handleImport"
-              >
+              <AppButton variant="secondary" :disabled="isLoading" @click="close">Cancel</AppButton>
+              <AppButton variant="primary" :disabled="isLoading || selectedFile === null" @click="handleImport">
                 {{ isLoading ? 'Importing…' : 'Import' }}
-              </button>
+              </AppButton>
             </div>
           </template>
 
@@ -54,7 +47,7 @@
             </div>
 
             <div class="modal__footer">
-              <button type="button" class="modal__btn modal__btn--submit" @click="close">Done</button>
+              <AppButton variant="primary" @click="close">Done</AppButton>
             </div>
           </template>
         </div>
@@ -67,6 +60,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { importMochiFile } from '../api/import'
 import type { MochiImportResult } from '../api/import'
+import AppButton from './AppButton.vue'
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
@@ -232,26 +226,6 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
   gap: var(--space-3);
 }
 
-.modal__btn {
-  padding: var(--space-2) var(--space-5);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  border: none;
-  transition: filter var(--transition-fast), opacity var(--transition-fast);
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
-  &--cancel {
-    background-color: var(--color-surface-2);
-    color: var(--color-text-muted);
-    &:hover:not(:disabled) { filter: brightness(1.2); }
-  }
-  &--submit {
-    background-color: var(--color-primary);
-    color: #fff;
-    &:hover:not(:disabled) { filter: brightness(1.1); }
-  }
-}
 
 .modal__result {
   display: flex;

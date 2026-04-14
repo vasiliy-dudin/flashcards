@@ -6,25 +6,25 @@
     <header class="deck-view__header">
       <h2 class="deck-view__title">{{ deck?.name ?? 'Deck' }}</h2>
       <div class="deck-view__toolbar">
-        <button
-          class="btn-icon"
-          :class="{ 'is-active': settingsStore.settings.showTranslation }"
+        <AppButton
+          variant="ghost"
+          :active="settingsStore.settings.showTranslation"
           title="Toggle translation"
           @click="settingsStore.updateSettings({ showTranslation: !settingsStore.settings.showTranslation })"
-        >T</button>
+        >T</AppButton>
         <ViewToggle :model-value="viewMode" @update:model-value="uiStore.setViewMode" />
-        <button class="btn-primary" @click="showAddModal = true">+ Add card</button>
+        <AppButton variant="primary" @click="showAddModal = true">+ Add card</AppButton>
       </div>
     </header>
 
     <div class="deck-view__filters">
       <SearchInput v-model="searchText" placeholder="Search cards…" />
-      <button
-        class="btn-icon"
-        :class="{ 'is-active': showArchived }"
+      <AppButton
+        variant="ghost"
+        :active="showArchived"
         title="Show archived cards"
         @click="showArchived = !showArchived"
-      >Archived</button>
+      >Archived</AppButton>
       <div class="tag-filter" ref="tagFilterEl">
         <button
           class="tag-filter__toggle"
@@ -48,11 +48,11 @@
 
     <div v-if="selectedIds.size > 0" class="deck-view__bulk-toolbar">
       <span class="deck-view__bulk-count">{{ selectedIds.size }} selected</span>
-      <button class="deck-view__bulk-btn" :disabled="isBulkLoading" @click="bulkSendToReview">Send to review</button>
-      <button class="deck-view__bulk-btn" :disabled="isBulkLoading" @click="bulkRemoveFromReview">Remove from review</button>
-      <button class="deck-view__bulk-btn" :disabled="isBulkLoading" @click="bulkResetProgress">Reset progress</button>
-      <button class="deck-view__bulk-btn deck-view__bulk-btn--danger" :disabled="isBulkLoading" @click="bulkDelete">Delete</button>
-      <button class="deck-view__bulk-btn" @click="selectedIds = new Set()">Clear</button>
+      <AppButton variant="ghost" size="sm" :disabled="isBulkLoading" @click="bulkSendToReview">Send to review</AppButton>
+      <AppButton variant="ghost" size="sm" :disabled="isBulkLoading" @click="bulkRemoveFromReview">Remove from review</AppButton>
+      <AppButton variant="ghost" size="sm" :disabled="isBulkLoading" @click="bulkResetProgress">Reset progress</AppButton>
+      <AppButton variant="ghost-danger" size="sm" :disabled="isBulkLoading" @click="bulkDelete">Delete</AppButton>
+      <AppButton variant="ghost" size="sm" @click="selectedIds = new Set()">Clear</AppButton>
     </div>
 
     <CardGrid
@@ -90,6 +90,7 @@ import AddCardModal from '../components/AddCardModal.vue'
 import CardDetailModal from '../components/CardDetailModal.vue'
 import ViewToggle from '../components/ViewToggle.vue'
 import SearchInput from '../components/SearchInput.vue'
+import AppButton from '../components/AppButton.vue'
 
 const route = useRoute()
 const deckId = computed<string>(() => {
@@ -243,44 +244,6 @@ function toggleTagsPanel(): void {
   gap: var(--space-3);
 }
 
-.btn-icon {
-  padding: var(--space-2) var(--space-3);
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: border-color var(--transition-fast), color var(--transition-fast);
-
-  &:hover {
-    border-color: var(--color-primary);
-    color: var(--color-text);
-  }
-
-  &.is-active {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-  }
-}
-
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  background-color: var(--color-primary);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: filter var(--transition-fast);
-
-  &:hover {
-    filter: brightness(1.1);
-  }
-}
-
 .deck-view__filters {
   display: flex;
   align-items: flex-start;
@@ -360,6 +323,12 @@ function toggleTagsPanel(): void {
   font-style: italic;
 }
 
+.deck-view__bulk-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-right: var(--space-2);
+}
+
 .deck-view__bulk-toolbar {
   display: flex;
   align-items: center;
@@ -369,39 +338,5 @@ function toggleTagsPanel(): void {
   background-color: var(--color-surface-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-}
-
-.deck-view__bulk-count {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  margin-right: var(--space-2);
-}
-
-.deck-view__bulk-btn {
-  padding: var(--space-1) var(--space-3);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-
-  &:hover:not(:disabled) {
-    color: var(--color-primary);
-    border-color: var(--color-primary);
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  &--danger {
-    &:hover:not(:disabled) {
-      color: var(--color-danger);
-      border-color: var(--color-danger);
-    }
-  }
 }
 </style>

@@ -32,16 +32,10 @@
           <p v-if="error" class="modal__error">{{ error }}</p>
 
           <div class="modal__footer">
-            <button type="button" class="modal__btn modal__btn--cancel" :disabled="isSaving" @click="close">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="modal__btn modal__btn--submit"
-              :disabled="isSaving || !word.trim() || !definition.trim()"
-            >
+            <AppButton variant="secondary" :disabled="isSaving" @click="close">Cancel</AppButton>
+            <AppButton variant="primary" type="submit" :disabled="isSaving || !word.trim() || !definition.trim()">
               {{ isSaving ? 'Saving…' : 'Save' }}
-            </button>
+            </AppButton>
           </div>
         </form>
       </div>
@@ -56,6 +50,7 @@ import { useTagsStore } from '../stores/tags'
 import { updateCard as updateCardApi } from '../api/cards'
 import type { Card } from '../types'
 import TagsInput from './TagsInput.vue'
+import AppButton from './AppButton.vue'
 
 const props = defineProps<{ card: Card }>()
 const emit = defineEmits<{
@@ -230,24 +225,4 @@ async function handleSubmit(): Promise<void> {
   gap: var(--space-3);
 }
 
-.modal__btn {
-  padding: var(--space-2) var(--space-5);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  border: none;
-  transition: filter var(--transition-fast), opacity var(--transition-fast);
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
-  &--cancel {
-    background-color: var(--color-surface-2);
-    color: var(--color-text-muted);
-    &:hover:not(:disabled) { filter: brightness(1.2); }
-  }
-  &--submit {
-    background-color: var(--color-primary);
-    color: #fff;
-    &:hover:not(:disabled) { filter: brightness(1.1); }
-  }
-}
 </style>

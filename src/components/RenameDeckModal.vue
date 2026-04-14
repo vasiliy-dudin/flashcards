@@ -21,16 +21,10 @@
           </label>
 
           <div class="modal__footer">
-            <button type="button" class="modal__btn modal__btn--cancel" @click="cancel">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="modal__btn modal__btn--submit"
-              :disabled="!name.trim() || name.trim() === currentName"
-            >
+            <AppButton variant="secondary" @click="cancel">Cancel</AppButton>
+            <AppButton variant="primary" type="submit" :disabled="!name.trim() || name.trim() === currentName">
               Rename
-            </button>
+            </AppButton>
           </div>
         </form>
       </div>
@@ -40,6 +34,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import AppButton from './AppButton.vue'
 
 const props = defineProps<{ currentName: string }>()
 const emit = defineEmits<{
@@ -158,24 +153,4 @@ function cancel(): void {
   gap: var(--space-3);
 }
 
-.modal__btn {
-  padding: var(--space-2) var(--space-5);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  border: none;
-  transition: filter var(--transition-fast), opacity var(--transition-fast);
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
-  &--cancel {
-    background-color: var(--color-surface-2);
-    color: var(--color-text-muted);
-    &:hover:not(:disabled) { filter: brightness(1.2); }
-  }
-  &--submit {
-    background-color: var(--color-primary);
-    color: #fff;
-    &:hover:not(:disabled) { filter: brightness(1.1); }
-  }
-}
 </style>

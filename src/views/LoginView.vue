@@ -15,9 +15,9 @@
           :disabled="isLoading"
         />
         <p v-if="error" class="login__error">{{ error }}</p>
-        <button class="login__btn" type="submit" :disabled="isLoading || !password">
+        <AppButton variant="primary" type="submit" :disabled="isLoading || !password" class="login__submit">
           {{ isLoading ? 'Signing in…' : 'Sign in' }}
-        </button>
+        </AppButton>
       </form>
     </div>
   </main>
@@ -28,6 +28,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { loadAllData } from '../loadAllData'
+import AppButton from '../components/AppButton.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -115,17 +116,7 @@ async function handleSubmit(): Promise<void> {
   color: var(--color-danger);
 }
 
-.login__btn {
-  padding: var(--space-2) var(--space-4);
-  background-color: var(--color-primary);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-base);
-  cursor: pointer;
-  transition: filter var(--transition-fast);
-
-  &:hover:not(:disabled) { filter: brightness(1.1); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+.login__submit {
+  width: 100%;
 }
 </style>

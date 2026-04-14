@@ -175,7 +175,7 @@
           <p class="settings-toggle-field__name">Mochi Cards</p>
           <p class="settings-toggle-field__desc">Import decks and cards from a Mochi Cards <code>.zip</code> or <code>.mochi</code> export file.</p>
         </div>
-        <button class="settings-import-btn" @click="showImportModal = true">Import…</button>
+        <AppButton variant="ghost" class="settings__import-btn" @click="showImportModal = true">Import…</AppButton>
       </div>
     </section>
   </main>
@@ -200,6 +200,7 @@ import { fetchAllTags } from '../api/tags'
 import type { SettingsConfig } from '../types'
 import type { MochiImportResult } from '../api/import'
 import ImportMochiModal from '../components/ImportMochiModal.vue'
+import AppButton from '../components/AppButton.vue'
 
 const settingsStore = useSettingsStore()
 const cardsStore = useCardsStore()
@@ -375,6 +376,11 @@ function onMaxIntervalChange(raw: string): void {
   max-width: 460px;
 }
 
+.settings__import-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 // Segmented control
 .segmented-control {
   display: flex;
@@ -404,24 +410,6 @@ function onMaxIntervalChange(raw: string): void {
   }
 }
 
-.settings-import-btn {
-  padding: var(--space-2) var(--space-4);
-  background-color: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: border-color var(--transition-fast), color var(--transition-fast);
-  flex-shrink: 0;
-
-  &:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-  }
-}
 
 // Toggle switch
 .toggle {
