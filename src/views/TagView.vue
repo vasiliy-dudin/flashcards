@@ -10,7 +10,12 @@
           @click="settingsStore.updateSettings({ showTranslation: !settingsStore.settings.showTranslation })"
         >T</AppButton>
         <ViewToggle :model-value="viewMode" @update:model-value="uiStore.setViewMode" />
-        <AppButton variant="primary" @click="showAddModal = true">+ Add card</AppButton>
+        <AppButton
+          variant="primary"
+          :disabled="!isOnline"
+          :title="!isOnline ? 'Not available offline' : undefined"
+          @click="showAddModal = true"
+        >+ Add card</AppButton>
       </div>
     </header>
 
@@ -61,8 +66,10 @@ import CardDetailModal from '../components/CardDetailModal.vue'
 import ViewToggle from '../components/ViewToggle.vue'
 import SearchInput from '../components/SearchInput.vue'
 import AppButton from '../components/AppButton.vue'
+import { useOnline } from '../composables/useOnline'
 
 const route = useRoute()
+const { isOnline } = useOnline()
 const tagName = computed<string>(() => {
   const name = route.params.name
   const raw = Array.isArray(name) ? name[0] : name

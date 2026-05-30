@@ -73,9 +73,13 @@ import { useSettingsStore } from '../stores/settings'
 import { scheduleCard, type ReviewResult } from '../utils/scheduler'
 import { buildReviewQueue } from '../utils/buildReviewQueue'
 import { updateCard as updateCardApi } from '../api/cards'
+import { useOnline } from '../composables/useOnline'
+import { addPendingReview } from '../lib/offline-store'
+import { flushPendingReviews, FLUSH_REVIEWS_SYNC_TAG } from '../lib/sync'
 
 const cardsStore = useCardsStore()
 const settingsStore = useSettingsStore()
+const { isOnline } = useOnline()
 
 const queue = ref<Card[]>([])
 const totalCount = ref(0)
@@ -91,6 +95,12 @@ onMounted(() => {
   const due = buildReviewQueue(cardsStore.cards, today, settingsStore.settings)
   queue.value = due
   totalCount.value = due.length
+
+  if (isOnline.value) {
+    flushPendingReviews().catch(err => {
+      console.error('[InboxView] Failed to flush pending reviews on mount:', err)
+    })
+  }
 })
 
 function playAudio(): void {
@@ -111,6 +121,14 @@ function flipCard(): void {
   if (settingsStore.settings.autoPlayAudio) playAudio()
 }
 
+async function registerBackgroundSync(): Promise<void> {
+  if (!('serviceWorker' in navigator)) return
+  const sw = await navigator.serviceWorker.ready
+  if ('sync' in sw) {
+    await (sw.sync as { register: (tag: string) => Promise<void> }).register(FLUSH_REVIEWS_SYNC_TAG)
+  }
+}
+
 async function submitReview(result: ReviewResult): Promise<void> {
   const card = queue.value[0]
   if (!card) return
@@ -118,15 +136,31 @@ async function submitReview(result: ReviewResult): Promise<void> {
   persistError.value = ''
   const patch = scheduleCard(card, result, settingsStore.settings)
 
-  try {
-    await updateCardApi(card.id, patch)
-    cardsStore.updateCard(card.id, patch)
-    queue.value = queue.value.slice(1)
-    isFlipped.value = false
-  } catch (err) {
-    persistError.value = 'Could not save your review. Please try again.'
-    console.error('[InboxView] Failed to persist card review:', card.id, err)
+  if (isOnline.value) {
+    try {
+      await updateCardApi(card.id, patch)
+    } catch (err) {
+      persistError.value = 'Could not save your review. Please try again.'
+      console.error('[InboxView] Failed to persist card review:', card.id, err)
+      return
+    }
+  } else {
+    try {
+      await addPendingReview({
+        cardId: card.id,
+        interval: patch.interval,
+        dueDate: patch.dueDate,
+        reviewedAt: new Date().toISOString(),
+      })
+      await registerBackgroundSync()
+    } catch (err) {
+      console.error('[InboxView] Failed to queue offline review:', card.id, err)
+    }
   }
+
+  cardsStore.updateCard(card.id, patch)
+  queue.value = queue.value.slice(1)
+  isFlipped.value = false
 }
 </script>
 

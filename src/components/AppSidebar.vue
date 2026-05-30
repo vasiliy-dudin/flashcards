@@ -74,6 +74,8 @@
       </ul>
     </section>
 
+    <p v-if="!isOnline" class="sidebar__offline-banner">You're offline</p>
+
     <div class="sidebar__footer">
       <router-link to="/settings" class="sidebar__nav-item"><IconSettings />Settings</router-link>
     </div>
@@ -109,6 +111,7 @@ import IconReview from './icons/IconReview.vue'
 import IconTags from './icons/IconTags.vue'
 import IconSettings from './icons/IconSettings.vue'
 import AppButton from './AppButton.vue'
+import { useOnline } from '../composables/useOnline'
 
 interface TagTreeNode {
   path: string
@@ -116,6 +119,8 @@ interface TagTreeNode {
   depth: number
   cardCount: number
 }
+
+const { isOnline } = useOnline()
 
 const BASE_INDENT_LEVELS = 1
 const MAX_SEARCH_RESULTS = 10
@@ -374,6 +379,17 @@ nav {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   font-style: italic;
+}
+
+.sidebar__offline-banner {
+  margin: auto var(--space-3) var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  text-align: center;
 }
 
 .sidebar__error {

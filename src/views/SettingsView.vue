@@ -178,6 +178,31 @@
         <AppButton variant="ghost" class="settings__import-btn" @click="showImportModal = true">Import…</AppButton>
       </div>
     </section>
+
+    <section class="settings-section">
+      <h3 class="settings-section__title">Offline</h3>
+
+      <div class="settings-field">
+        <div>
+          <p class="settings-toggle-field__name">Download for offline</p>
+          <p class="settings-toggle-field__desc">Saves all cards, decks, and audio to your device so the app works without an internet connection.</p>
+        </div>
+        <AppButton
+          variant="ghost"
+          class="settings__import-btn"
+          :disabled="syncInProgress || !isOnline"
+          @click="startSync"
+        >{{ syncButtonLabel }}</AppButton>
+      </div>
+
+      <p v-if="lastSynced" class="settings-sync-meta">
+        Last synced: {{ formatSyncDate(lastSynced) }}
+      </p>
+      <p v-if="pendingCount > 0" class="settings-sync-meta settings-sync-meta--pending">
+        {{ pendingCount }} pending review{{ pendingCount === 1 ? '' : 's' }} queued for upload
+      </p>
+      <p v-if="syncError" class="settings-sync-meta settings-sync-meta--error">{{ syncError }}</p>
+    </section>
   </main>
 
   <ImportMochiModal
@@ -188,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSettingsStore } from '../stores/settings'
 import { useCardsStore } from '../stores/cards'
@@ -201,14 +226,59 @@ import type { SettingsConfig } from '../types'
 import type { MochiImportResult } from '../api/import'
 import ImportMochiModal from '../components/ImportMochiModal.vue'
 import AppButton from '../components/AppButton.vue'
+import { useOnline } from '../composables/useOnline'
+import { downloadAll, LAST_SYNCED_KEY } from '../lib/sync'
+import { loadPendingReviews } from '../lib/offline-store'
 
 const settingsStore = useSettingsStore()
 const cardsStore = useCardsStore()
 const decksStore = useDecksStore()
 const tagsStore = useTagsStore()
 const { settings } = storeToRefs(settingsStore)
+const { isOnline } = useOnline()
 
 const showImportModal = ref(false)
+const syncInProgress = ref(false)
+const syncAudioDone = ref(0)
+const syncAudioTotal = ref(0)
+const syncError = ref<string | null>(null)
+const lastSynced = ref<string | null>(localStorage.getItem(LAST_SYNCED_KEY))
+const pendingCount = ref(0)
+
+const syncButtonLabel = computed<string>(() => {
+  if (!syncInProgress.value) return 'Sync now'
+  if (syncAudioTotal.value === 0) return 'Syncing…'
+  return `Audio ${syncAudioDone.value} / ${syncAudioTotal.value}`
+})
+
+onMounted(async () => {
+  const reviews = await loadPendingReviews()
+  pendingCount.value = reviews.length
+})
+
+async function startSync(): Promise<void> {
+  syncInProgress.value = true
+  syncAudioDone.value = 0
+  syncAudioTotal.value = 0
+  syncError.value = null
+  try {
+    await downloadAll((done, total) => {
+      syncAudioDone.value = done
+      syncAudioTotal.value = total
+    })
+    lastSynced.value = localStorage.getItem(LAST_SYNCED_KEY)
+    pendingCount.value = (await loadPendingReviews()).length
+  } catch (err) {
+    syncError.value = err instanceof Error ? err.message : 'Sync failed. Please try again.'
+    console.error('[SettingsView] Sync failed:', err)
+  } finally {
+    syncInProgress.value = false
+  }
+}
+
+function formatSyncDate(iso: string): string {
+  return new Date(iso).toLocaleString()
+}
 
 async function onImported(_result: MochiImportResult): Promise<void> {
   const [freshCards, freshDecks, freshTags] = await Promise.all([
@@ -379,6 +449,19 @@ function onMaxIntervalChange(raw: string): void {
 .settings__import-btn {
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+.settings-sync-meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+
+  &--pending {
+    color: var(--color-warning, var(--color-text-muted));
+  }
+
+  &--error {
+    color: var(--color-danger);
+  }
 }
 
 // Segmented control

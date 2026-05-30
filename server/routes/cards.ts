@@ -81,4 +81,45 @@ app.delete('/:id', (c) => {
   return c.body(null, 204)
 })
 
+interface ReviewEntry {
+  id: string
+  interval: number
+  dueDate: string
+}
+
+function isReviewEntry(value: unknown): value is ReviewEntry {
+  if (typeof value !== 'object' || value === null) return false
+  const obj = value as Record<string, unknown>
+  return typeof obj.id === 'string' && typeof obj.interval === 'number' && typeof obj.dueDate === 'string'
+}
+
+app.post('/bulk-review', async (c) => {
+  let body: unknown
+  try { body = await c.req.json() } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+  if (typeof body !== 'object' || body === null || !Array.isArray((body as Record<string, unknown>).reviews)) {
+    return c.json({ error: 'Body must be { reviews: ReviewEntry[] }' }, 400)
+  }
+  const reviews = (body as { reviews: unknown[] }).reviews
+  if (!reviews.every(isReviewEntry)) {
+    return c.json({ error: 'Each review must have id (string), interval (number), dueDate (string)' }, 400)
+  }
+  try {
+    db.transaction((tx) => {
+      for (const review of reviews) {
+        tx.update(cards)
+          .set({ interval: review.interval, dueDate: review.dueDate })
+          .where(eq(cards.id, review.id))
+          .run()
+      }
+    })
+    return c.json({ updated: reviews.length })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('[cards] POST bulk-review failed:', message)
+    return c.json({ error: `DB update failed: ${message}` }, 500)
+  }
+})
+
 export default app

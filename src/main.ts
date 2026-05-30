@@ -5,7 +5,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import { router } from './router/index'
 import { useAuthStore } from './stores/auth'
-import { loadAllData } from './loadAllData'
+import { loadAllData, loadAllDataOffline } from './loadAllData'
 
 async function bootstrap(): Promise<void> {
   const app = createApp(App)
@@ -13,11 +13,20 @@ async function bootstrap(): Promise<void> {
   app.use(router)
   const authStore = useAuthStore()
   if (authStore.isAuthenticated) {
-    try {
-      await loadAllData()
-    } catch (err) {
-      console.error('[main] Failed to load data from server:', err)
-      authStore.logout()
+    if (navigator.onLine) {
+      try {
+        await loadAllData()
+      } catch (err) {
+        const is401 = err instanceof Error && err.message.includes(': 401')
+        if (is401) {
+          authStore.logout()
+        } else {
+          console.error('[main] Failed to load data from server, falling back to cache:', err)
+          await loadAllDataOffline()
+        }
+      }
+    } else {
+      await loadAllDataOffline()
     }
   }
 
