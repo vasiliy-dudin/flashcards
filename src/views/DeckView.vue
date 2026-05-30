@@ -339,4 +339,24 @@ function toggleTagsPanel(): void {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
+
+@media (max-width: #{$bp-mobile}) {
+  .deck-view {
+    padding: var(--space-4);
+  }
+
+  .deck-view__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .deck-view__toolbar {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .deck-view__filters {
+    flex-wrap: wrap;
+  }
+}
 </style>

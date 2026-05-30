@@ -1,5 +1,5 @@
 <template>
-  <nav class="sidebar">
+  <nav class="sidebar" :class="{ 'sidebar--mobile-open': uiStore.sidebarOpen }">
     <div class="sidebar__search" @focusout="onSearchFocusOut">
       <SearchInput v-model="searchQuery" placeholder="Search cards…" />
       <ul v-if="searchResults.length > 0" class="sidebar__search-results">
@@ -93,6 +93,7 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useDecksStore } from '../stores/decks'
+import { useUiStore } from '../stores/ui'
 import { useTagsStore } from '../stores/tags'
 import { useCardsStore } from '../stores/cards'
 import { useSettingsStore } from '../stores/settings'
@@ -129,6 +130,7 @@ const selectedCard = ref<Card | null>(null)
 
 const route = useRoute()
 const router = useRouter()
+const uiStore = useUiStore()
 
 const decksStore = useDecksStore()
 const cardsStore = useCardsStore()
@@ -394,5 +396,24 @@ nav {
   gap: var(--space-2);
 }
 
+@media (max-width: #{$bp-mobile}) {
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: var(--z-index-sidebar);
+    transform: translateX(-100%);
+    transition: transform var(--transition-normal);
+    box-shadow: var(--shadow-md);
+    overflow-y: auto;
 
+    &.sidebar--mobile-open {
+      transform: translateX(0);
+    }
+  }
+
+  .sidebar__nav-item { min-height: 44px; }
+  .sidebar__add-btn  { min-width: 44px; min-height: 44px; }
+}
 </style>

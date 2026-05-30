@@ -411,4 +411,11 @@ function playAudio(card: Card): void {
     background-color: var(--color-surface-2);
   }
 }
+
+@media (max-width: #{$bp-mobile}) {
+  .card-table__td--checkbox input[type='checkbox'] {
+    width: 20px;
+    height: 20px;
+  }
+}
 </style>

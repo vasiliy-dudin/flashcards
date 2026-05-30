@@ -143,4 +143,10 @@ function onItemClick(card: Card, event: MouseEvent): void {
   color: var(--color-text-muted);
   font-style: italic;
 }
+
+@media (max-width: #{$bp-mobile}) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
 </style>

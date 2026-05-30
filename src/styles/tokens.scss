@@ -62,6 +62,8 @@
 
   // --- Z-index scale ---
   --z-index-dropdown: 10;
+  --z-index-overlay:  19;
+  --z-index-sidebar:  20;
 }
 
 // --- Light theme overrides ---
@@ -128,3 +130,7 @@ $shadow-md: var(--shadow-md);
 
 $transition-fast:   var(--transition-fast);
 $transition-normal: var(--transition-normal);
+
+// Breakpoint variable — bare SASS value (NOT a var() wrapper).
+// Use as: @media (max-width: #{$bp-mobile}) { ... }
+$bp-mobile: 768px;

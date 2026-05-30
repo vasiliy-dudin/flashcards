@@ -290,4 +290,27 @@ async function submitReview(result: ReviewResult): Promise<void> {
   font-size: var(--font-size-base);
   border-radius: var(--radius-md);
 }
+
+@media (max-width: #{$bp-mobile}) {
+  .inbox {
+    padding: var(--space-4);
+    gap: var(--space-4);
+  }
+
+  .inbox__header,
+  .inbox__stage,
+  .inbox__actions,
+  .inbox__controls,
+  .inbox__persist-error {
+    max-width: 100%;
+  }
+
+  .inbox__word {
+    font-size: var(--font-size-xl);
+  }
+
+  .inbox__face {
+    padding: var(--space-4);
+  }
+}
 </style>

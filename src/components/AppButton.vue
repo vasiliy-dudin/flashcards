@@ -136,4 +136,10 @@ withDefaults(defineProps<{
     &:hover:not(:disabled) { filter: brightness(1.1); }
   }
 }
+
+@media (max-width: #{$bp-mobile}) {
+  .app-btn--icon { width: 44px; height: 44px; }
+  .app-btn--sm   { min-height: 44px; }
+  .app-btn--md   { min-height: 44px; }
+}
 </style>
