@@ -8,7 +8,11 @@ export { FLUSH_REVIEWS_SYNC_TAG, LAST_SYNCED_KEY } from './sync-constants'
 
 const AUDIO_CACHE_NAME = 'audio-v1'
 
-export async function downloadAll(onProgress?: (done: number, total: number) => void): Promise<void> {
+export interface DownloadResult {
+  audioMissed: number
+}
+
+export async function downloadAll(onProgress?: (done: number, total: number) => void): Promise<DownloadResult> {
   const [cards, decks, tags] = await Promise.all([fetchAllCards(), fetchAllDecks(), fetchAllTags()])
 
   await db.transaction('rw', [db.cards, db.decks, db.tags], async () => {
@@ -17,15 +21,17 @@ export async function downloadAll(onProgress?: (done: number, total: number) => 
   })
 
   const audioUrls = cards.map((c) => c.audioUrl).filter((url): url is string => url !== null)
+  let audioMissed = 0
 
   if ('caches' in globalThis && audioUrls.length > 0) {
     const cache = await caches.open(AUDIO_CACHE_NAME)
     let done = 0
     for (const url of audioUrls) {
       try {
-        await cache.add(url)
+        const existing = await cache.match(url)
+        if (!existing) await cache.add(url)
       } catch {
-        // audio file temporarily unavailable — skip, do not abort the sync
+        audioMissed++
       }
       done += 1
       onProgress?.(done, audioUrls.length)
@@ -33,10 +39,12 @@ export async function downloadAll(onProgress?: (done: number, total: number) => 
   }
 
   localStorage.setItem(LAST_SYNCED_KEY, new Date().toISOString())
+  return { audioMissed }
 }
 
 export async function flushPendingReviews(): Promise<void> {
-  const pending = await loadPendingReviews()
+  const pending = (await loadPendingReviews())
+    .sort((a, b) => a.reviewedAt.localeCompare(b.reviewedAt))
   if (pending.length === 0) return
 
   const reviews = pending.map(({ cardId, interval, dueDate }) => ({ id: cardId, interval, dueDate }))

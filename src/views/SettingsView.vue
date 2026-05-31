@@ -201,6 +201,9 @@
       <p v-if="pendingCount > 0" class="settings-sync-meta settings-sync-meta--pending">
         {{ pendingCount }} pending review{{ pendingCount === 1 ? '' : 's' }} queued for upload
       </p>
+      <p v-if="syncAudioMissed > 0" class="settings-sync-meta settings-sync-meta--pending">
+        {{ syncAudioMissed }} audio file{{ syncAudioMissed === 1 ? '' : 's' }} could not be downloaded
+      </p>
       <p v-if="syncError" class="settings-sync-meta settings-sync-meta--error">{{ syncError }}</p>
     </section>
   </main>
@@ -242,6 +245,7 @@ const syncInProgress = ref(false)
 const syncAudioDone = ref(0)
 const syncAudioTotal = ref(0)
 const syncError = ref<string | null>(null)
+const syncAudioMissed = ref(0)
 const lastSynced = ref<string | null>(localStorage.getItem(LAST_SYNCED_KEY))
 const pendingCount = ref(0)
 
@@ -261,11 +265,13 @@ async function startSync(): Promise<void> {
   syncAudioDone.value = 0
   syncAudioTotal.value = 0
   syncError.value = null
+  syncAudioMissed.value = 0
   try {
-    await downloadAll((done, total) => {
+    const result = await downloadAll((done, total) => {
       syncAudioDone.value = done
       syncAudioTotal.value = total
     })
+    syncAudioMissed.value = result.audioMissed
     lastSynced.value = localStorage.getItem(LAST_SYNCED_KEY)
     pendingCount.value = (await loadPendingReviews()).length
   } catch (err) {

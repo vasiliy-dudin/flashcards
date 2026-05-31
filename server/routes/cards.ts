@@ -106,15 +106,18 @@ app.post('/bulk-review', async (c) => {
     return c.json({ error: 'Each review must have id (string), interval (number), dueDate (string)' }, 400)
   }
   try {
+    let updated = 0
     db.transaction((tx) => {
       for (const review of reviews) {
-        tx.update(cards)
+        const rows = tx.update(cards)
           .set({ interval: review.interval, dueDate: review.dueDate })
           .where(eq(cards.id, review.id))
-          .run()
+          .returning()
+          .all()
+        if (rows.length > 0) updated++
       }
     })
-    return c.json({ updated: reviews.length })
+    return c.json({ updated, skipped: reviews.length - updated })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     console.error('[cards] POST bulk-review failed:', message)

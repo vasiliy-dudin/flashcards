@@ -76,6 +76,7 @@ import { updateCard as updateCardApi } from '../api/cards'
 import { useOnline } from '../composables/useOnline'
 import { addPendingReview } from '../lib/offline-store'
 import { flushPendingReviews, FLUSH_REVIEWS_SYNC_TAG } from '../lib/sync'
+import { loadAllData } from '../loadAllData'
 
 const cardsStore = useCardsStore()
 const settingsStore = useSettingsStore()
@@ -90,17 +91,19 @@ const currentCard = computed<Card | undefined>(() => queue.value[0])
 const reviewedCount = computed<number>(() => totalCount.value - queue.value.length)
 const isReverse = computed<boolean>(() => settingsStore.settings.reviewInReverse)
 
-onMounted(() => {
+onMounted(async () => {
+  if (isOnline.value) {
+    try {
+      await flushPendingReviews()
+      await loadAllData()
+    } catch (err) {
+      console.error('[InboxView] Flush/reload failed on mount:', err)
+    }
+  }
   const today = new Date().toISOString().slice(0, 10)
   const due = buildReviewQueue(cardsStore.cards, today, settingsStore.settings)
   queue.value = due
   totalCount.value = due.length
-
-  if (isOnline.value) {
-    flushPendingReviews().catch(err => {
-      console.error('[InboxView] Failed to flush pending reviews on mount:', err)
-    })
-  }
 })
 
 function playAudio(): void {
@@ -154,7 +157,9 @@ async function submitReview(result: ReviewResult): Promise<void> {
       })
       await registerBackgroundSync()
     } catch (err) {
+      persistError.value = 'Could not save your review. Please try again.'
       console.error('[InboxView] Failed to queue offline review:', card.id, err)
+      return
     }
   }
 

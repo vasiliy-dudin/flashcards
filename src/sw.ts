@@ -37,7 +37,8 @@ self.addEventListener('sync', (event) => {
 })
 
 async function flushReviews(): Promise<void> {
-  const pending = await loadPendingReviews()
+  const pending = (await loadPendingReviews())
+    .sort((a, b) => a.reviewedAt.localeCompare(b.reviewedAt))
   if (pending.length === 0) return
 
   const reviews = pending.map(({ cardId, interval, dueDate }) => ({ id: cardId, interval, dueDate }))
