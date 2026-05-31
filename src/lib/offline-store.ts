@@ -8,6 +8,8 @@ export interface PendingReview {
   interval: number
   dueDate: string
   reviewedAt: string
+  stability?: number | null
+  difficulty?: number | null
 }
 
 class FlashcardsDb extends Dexie {

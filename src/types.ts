@@ -24,6 +24,10 @@ export interface Card {
   inReview: boolean
   /** Whether the card has been archived (excluded from review queue) */
   archived: boolean
+  /** FSRS memory stability in days; null for cards not yet reviewed under FSRS */
+  stability: number | null
+  /** FSRS difficulty [1, 10]; null for cards not yet reviewed under FSRS */
+  difficulty: number | null
 }
 
 export interface Deck {
@@ -46,8 +50,6 @@ export type TableColumnId = 'word' | 'translation' | 'transcription' | 'tags' | 
 export const ALL_TABLE_COLUMNS: TableColumnId[] = ['word', 'translation', 'transcription', 'tags', 'interval', 'dueDate', 'createdAt']
 
 export interface SettingsConfig {
-  rememberMultiplier: number
-  forgetMultiplier: number
   maxIntervalDays: number
   applyFuzzing: boolean
   retireCards: boolean
@@ -64,11 +66,13 @@ export interface SettingsConfig {
   enabledTableColumns: TableColumnId[]
   /** Automatically play audio when a card is revealed during review */
   autoPlayAudio: boolean
+  /** Target recall probability at each review (0–1) */
+  fsrsTargetRetention: number
+  /** FSRS parameter vector w (21 values) */
+  fsrsParameters: number[]
 }
 
 export const DEFAULT_SETTINGS: SettingsConfig = {
-  rememberMultiplier: 1.8,
-  forgetMultiplier: 0.5,
   maxIntervalDays: 365,
   applyFuzzing: true,
   retireCards: true,
@@ -79,4 +83,13 @@ export const DEFAULT_SETTINGS: SettingsConfig = {
   theme: 'light',
   enabledTableColumns: [...ALL_TABLE_COLUMNS],
   autoPlayAudio: false,
+  fsrsTargetRetention: 0.9,
+  fsrsParameters: [
+    0.212, 1.2931, 2.3065, 8.2956,
+    6.4133, 0.8334, 3.0194, 0.001,
+    1.8722, 0.1666, 0.796, 1.4835,
+    0.0614, 0.2629, 1.6483, 0.6014,
+    1.8729, 0.5425, 0.0912, 0.0658,
+    0.1542,
+  ],
 }

@@ -1,4 +1,4 @@
-import { integer, text, sqliteTable } from 'drizzle-orm/sqlite-core'
+import { integer, real, text, sqliteTable } from 'drizzle-orm/sqlite-core'
 
 export const cards = sqliteTable('cards', {
   id:          text('id').primaryKey(),
@@ -22,6 +22,10 @@ export const cards = sqliteTable('cards', {
   inReview:    integer('in_review', { mode: 'boolean' }).notNull().default(false),
   /** 1 = archived (excluded from review), 0 = active */
   archived:    integer('archived', { mode: 'boolean' }).notNull().default(false),
+  /** FSRS memory stability in days; null for cards not yet reviewed under FSRS */
+  stability:   real('stability'),
+  /** FSRS difficulty [1, 10]; null for cards not yet reviewed under FSRS */
+  difficulty:  real('difficulty'),
 })
 
 export const decks = sqliteTable('decks', {

@@ -18,10 +18,10 @@ describe('useSettingsStore', () => {
 
   it('updateSettings merges a partial patch', () => {
     const store = useSettingsStore()
-    store.updateSettings({ rememberMultiplier: 2.5 })
-    expect(store.settings.rememberMultiplier).toBe(2.5)
+    store.updateSettings({ fsrsTargetRetention: 0.85 })
+    expect(store.settings.fsrsTargetRetention).toBe(0.85)
     // other fields unchanged
-    expect(store.settings.forgetMultiplier).toBe(DEFAULT_SETTINGS.forgetMultiplier)
+    expect(store.settings.applyFuzzing).toBe(DEFAULT_SETTINGS.applyFuzzing)
   })
 
   it('updateSettings writes to localStorage', () => {
@@ -32,13 +32,13 @@ describe('useSettingsStore', () => {
   })
 
   it('restores saved settings from localStorage on init', () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ rememberMultiplier: 3.0, applyFuzzing: false }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ fsrsTargetRetention: 0.95, applyFuzzing: false }))
     setActivePinia(createPinia())
     const store = useSettingsStore()
-    expect(store.settings.rememberMultiplier).toBe(3.0)
+    expect(store.settings.fsrsTargetRetention).toBe(0.95)
     expect(store.settings.applyFuzzing).toBe(false)
     // fields not in storage fall back to defaults
-    expect(store.settings.forgetMultiplier).toBe(DEFAULT_SETTINGS.forgetMultiplier)
+    expect(store.settings.maxIntervalDays).toBe(DEFAULT_SETTINGS.maxIntervalDays)
   })
 
   it('falls back to DEFAULT_SETTINGS when localStorage contains invalid JSON', () => {
@@ -63,7 +63,7 @@ describe('useSettingsStore', () => {
 
   it('new fields added to DEFAULT_SETTINGS get their default value even if absent in stored JSON', () => {
     // Simulate an old stored object missing a new field
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ rememberMultiplier: 2.0 }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ maxIntervalDays: 180 }))
     setActivePinia(createPinia())
     const store = useSettingsStore()
     // aiPrompt exists in DEFAULT_SETTINGS but not in the stored object

@@ -20,6 +20,9 @@ function makeCard(overrides: Partial<Card> & { id: string }): Card {
     dueDate: TODAY,
     createdAt: '2026-01-01',
     inReview: true,
+    archived: false,
+    stability: null,
+    difficulty: null,
     ...overrides,
   }
 }

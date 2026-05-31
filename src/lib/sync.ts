@@ -47,7 +47,14 @@ export async function flushPendingReviews(): Promise<void> {
     .sort((a, b) => a.reviewedAt.localeCompare(b.reviewedAt))
   if (pending.length === 0) return
 
-  const reviews = pending.map(({ cardId, interval, dueDate }) => ({ id: cardId, interval, dueDate }))
+  const reviews = pending.map(({ cardId, interval, dueDate, stability, difficulty }) => {
+    const entry: { id: string; interval: number; dueDate: string; stability?: number | null; difficulty?: number | null } = { id: cardId, interval, dueDate }
+    // JSON-parsed objects don't include absent optional keys, so the server's
+    // 'stability' in review check correctly distinguishes absent from null.
+    if (stability !== undefined) entry.stability = stability
+    if (difficulty !== undefined) entry.difficulty = difficulty
+    return entry
+  })
 
   const res = await fetch('/api/cards/bulk-review', {
     method: 'POST',

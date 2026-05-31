@@ -85,6 +85,8 @@ interface ReviewEntry {
   id: string
   interval: number
   dueDate: string
+  stability?: number | null
+  difficulty?: number | null
 }
 
 function isReviewEntry(value: unknown): value is ReviewEntry {
@@ -109,8 +111,15 @@ app.post('/bulk-review', async (c) => {
     let updated = 0
     db.transaction((tx) => {
       for (const review of reviews) {
+        const patch: Partial<typeof cards.$inferInsert> = {
+          interval: review.interval,
+          dueDate: review.dueDate,
+        }
+        // JSON-parsed objects omit absent optional keys, so 'in' correctly detects FSRS reviews
+        if ('stability' in review) patch.stability = review.stability ?? null
+        if ('difficulty' in review) patch.difficulty = review.difficulty ?? null
         const rows = tx.update(cards)
-          .set({ interval: review.interval, dueDate: review.dueDate })
+          .set(patch)
           .where(eq(cards.id, review.id))
           .returning()
           .all()

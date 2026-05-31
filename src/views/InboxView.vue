@@ -56,8 +56,10 @@
       </div>
 
       <div v-if="isFlipped" class="inbox__actions">
-        <AppButton variant="danger" size="lg" class="inbox__action-btn" @click="submitReview('forget')">Forget</AppButton>
-        <AppButton variant="success" size="lg" class="inbox__action-btn" @click="submitReview('remember')">Remember</AppButton>
+        <AppButton variant="danger" size="lg" class="inbox__action-btn" @click="submitReview(1)">Again</AppButton>
+        <AppButton variant="secondary" size="lg" class="inbox__action-btn" @click="submitReview(2)">Hard</AppButton>
+        <AppButton variant="success" size="lg" class="inbox__action-btn" @click="submitReview(3)">Good</AppButton>
+        <AppButton variant="primary" size="lg" class="inbox__action-btn" @click="submitReview(4)">Easy</AppButton>
       </div>
       <p v-else class="inbox__hint">Click the card to reveal</p>
     </template>
@@ -70,7 +72,7 @@ import type { Card } from '../types'
 import AppButton from '../components/AppButton.vue'
 import { useCardsStore } from '../stores/cards'
 import { useSettingsStore } from '../stores/settings'
-import { scheduleCard, type ReviewResult } from '../utils/scheduler'
+import { scheduleCardFsrs, type FsrsGrade } from '../utils/fsrs'
 import { buildReviewQueue } from '../utils/buildReviewQueue'
 import { updateCard as updateCardApi } from '../api/cards'
 import { useOnline } from '../composables/useOnline'
@@ -132,37 +134,43 @@ async function registerBackgroundSync(): Promise<void> {
   }
 }
 
-async function submitReview(result: ReviewResult): Promise<void> {
-  const card = queue.value[0]
-  if (!card) return
+type ReviewPatch = Pick<Card, 'interval' | 'dueDate' | 'stability' | 'difficulty'>
 
-  persistError.value = ''
-  const patch = scheduleCard(card, result, settingsStore.settings)
-
+async function persistReview(card: Card, patch: ReviewPatch): Promise<boolean> {
   if (isOnline.value) {
     try {
       await updateCardApi(card.id, patch)
+      return true
     } catch (err) {
       persistError.value = 'Could not save your review. Please try again.'
       console.error('[InboxView] Failed to persist card review:', card.id, err)
-      return
-    }
-  } else {
-    try {
-      await addPendingReview({
-        cardId: card.id,
-        interval: patch.interval,
-        dueDate: patch.dueDate,
-        reviewedAt: new Date().toISOString(),
-      })
-      await registerBackgroundSync()
-    } catch (err) {
-      persistError.value = 'Could not save your review. Please try again.'
-      console.error('[InboxView] Failed to queue offline review:', card.id, err)
-      return
+      return false
     }
   }
+  try {
+    await addPendingReview({
+      cardId: card.id,
+      interval: patch.interval,
+      dueDate: patch.dueDate,
+      reviewedAt: new Date().toISOString(),
+      stability: patch.stability,
+      difficulty: patch.difficulty,
+    })
+    await registerBackgroundSync()
+    return true
+  } catch (err) {
+    persistError.value = 'Could not save your review. Please try again.'
+    console.error('[InboxView] Failed to queue offline review:', card.id, err)
+    return false
+  }
+}
 
+async function submitReview(grade: FsrsGrade): Promise<void> {
+  const card = queue.value[0]
+  if (!card) return
+  persistError.value = ''
+  const patch = scheduleCardFsrs(card, grade, settingsStore.settings)
+  if (!await persistReview(card, patch)) return
   cardsStore.updateCard(card.id, patch)
   queue.value = queue.value.slice(1)
   isFlipped.value = false

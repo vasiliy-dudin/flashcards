@@ -30,6 +30,8 @@ const MOCK_CARD: Card = {
   createdAt: '2026-05-30',
   inReview: false,
   archived: false,
+  stability: null,
+  difficulty: null,
 }
 
 const MOCK_DECK: Deck = {

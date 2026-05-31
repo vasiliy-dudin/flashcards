@@ -29,6 +29,14 @@ function applyStartupPatches(): void {
     sqlite.prepare("ALTER TABLE cards ADD COLUMN archived INTEGER NOT NULL DEFAULT 0").run()
     console.log('[db] Applied archived column via startup patch')
   }
+  if (!columns.some(c => c.name === 'stability')) {
+    sqlite.prepare("ALTER TABLE cards ADD COLUMN stability REAL").run()
+    console.log('[db] Applied stability column via startup patch')
+  }
+  if (!columns.some(c => c.name === 'difficulty')) {
+    sqlite.prepare("ALTER TABLE cards ADD COLUMN difficulty REAL").run()
+    console.log('[db] Applied difficulty column via startup patch')
+  }
 }
 
 migrate(db, { migrationsFolder: MIGRATIONS_DIR })

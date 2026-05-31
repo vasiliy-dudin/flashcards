@@ -25,39 +25,37 @@
     <section class="settings-section">
       <h3 class="settings-section__title">Algorithm</h3>
 
+      <label class="settings-field settings-field--stacked">
+        <span class="settings-field__label">
+          Target retention rate
+          <span class="settings-field__hint">Probability of recall at each review (0.5–0.99). Higher = more frequent reviews.</span>
+        </span>
+        <input
+          class="settings-input settings-input--narrow"
+          type="number"
+          min="0.5"
+          max="0.99"
+          step="0.01"
+          :value="settings.fsrsTargetRetention"
+          @change="onFsrsRetentionChange(($event.target as HTMLInputElement).value)"
+        />
+      </label>
+
+      <label class="settings-field settings-field--stacked">
+        <span class="settings-field__label">
+          Parameters
+          <span class="settings-field__hint">21 space-separated values. Changing these affects how intervals are calculated.</span>
+        </span>
+        <textarea
+          class="settings-input settings-input--textarea"
+          rows="3"
+          :value="settings.fsrsParameters.join(' ')"
+          @change="onFsrsParametersChange(($event.target as HTMLInputElement).value)"
+        />
+        <p v-if="fsrsParametersError" class="settings-sync-meta settings-sync-meta--error">{{ fsrsParametersError }}</p>
+      </label>
+
       <div class="settings-row settings-row--inputs">
-        <label class="settings-field">
-          <span class="settings-field__label">
-            Remember multiplier
-            <span class="settings-field__hint">Interval is multiplied by this on "Remember"</span>
-          </span>
-          <input
-            class="settings-input settings-input--narrow"
-            type="number"
-            min="1"
-            max="10"
-            step="0.1"
-            :value="settings.rememberMultiplier"
-            @change="onRememberMultiplierChange(($event.target as HTMLInputElement).value)"
-          />
-        </label>
-
-        <label class="settings-field">
-          <span class="settings-field__label">
-            Forgot multiplier
-            <span class="settings-field__hint">Interval is multiplied by this on "Forget"</span>
-          </span>
-          <input
-            class="settings-input settings-input--narrow"
-            type="number"
-            min="0.1"
-            max="1"
-            step="0.1"
-            :value="settings.forgetMultiplier"
-            @change="onForgetMultiplierChange(($event.target as HTMLInputElement).value)"
-          />
-        </label>
-
         <label class="settings-field">
           <span class="settings-field__label">
             Max interval
@@ -259,6 +257,7 @@ import { fetchAllCards } from '../api/cards'
 import { fetchAllDecks } from '../api/decks'
 import { fetchAllTags } from '../api/tags'
 import type { SettingsConfig } from '../types'
+import { DEFAULT_SETTINGS } from '../types'
 import type { MochiImportResult } from '../api/import'
 import { downloadBackup, restoreFromBackup } from '../api/backup'
 import ImportMochiModal from '../components/ImportMochiModal.vue'
@@ -386,19 +385,27 @@ function onLimitChange(raw: string): void {
   update('limitNewCardsPerDay', isNaN(parsed) || raw.trim() === '' ? null : Math.max(1, parsed))
 }
 
-function onRememberMultiplierChange(raw: string): void {
-  const v = parseFloat(raw)
-  if (!isNaN(v)) update('rememberMultiplier', v)
-}
-
-function onForgetMultiplierChange(raw: string): void {
-  const v = parseFloat(raw)
-  if (!isNaN(v)) update('forgetMultiplier', v)
-}
-
 function onMaxIntervalChange(raw: string): void {
   const v = parseInt(raw, 10)
   if (!isNaN(v)) update('maxIntervalDays', v)
+}
+
+const EXPECTED_PARAMETER_COUNT = DEFAULT_SETTINGS.fsrsParameters.length
+const fsrsParametersError = ref<string | null>(null)
+
+function onFsrsRetentionChange(raw: string): void {
+  const v = parseFloat(raw)
+  if (!isNaN(v)) update('fsrsTargetRetention', Math.min(0.99, Math.max(0.5, v)))
+}
+
+function onFsrsParametersChange(raw: string): void {
+  const parts = raw.trim().split(/[\s,]+/).map(Number).filter(n => !isNaN(n))
+  if (parts.length === EXPECTED_PARAMETER_COUNT) {
+    fsrsParametersError.value = null
+    update('fsrsParameters', parts)
+  } else {
+    fsrsParametersError.value = `Expected ${EXPECTED_PARAMETER_COUNT} values, got ${parts.length}.`
+  }
 }
 </script>
 
