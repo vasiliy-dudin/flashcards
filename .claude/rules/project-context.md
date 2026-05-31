@@ -168,25 +168,31 @@ Tags are visible as a flat/tree list in the sidebar with card counts.
 
 ### Inbox (Review Session)
 
-Mechanics identical to Mochi Cards:
 - Shows all cards due today across all decks.
 - One card at a time: front shown → user recalls → reveals back.
-- Two response buttons: Remember / Forget.
+- Four response buttons: **Again / Hard / Good / Easy** (FSRS grades 1–4).
 
-### Scheduling Algorithm (Mochi default)
+### Scheduling Algorithm — FSRS
 
-Implements the exact Mochi algorithm:
+The app uses **FSRS-5** (Free Spaced Repetition Scheduler) as the sole scheduling algorithm.
 
-- newInterval = currentInterval × multiplier
-  - Remember multiplier: 1.8 (default, user-configurable)
-  - Forget multiplier:   0.5 (default, user-configurable)
-- Max interval: 365 days (configurable)
-- Fuzzing: enabled by default — adds a small random offset to due dates
-  to prevent cards from clustering on the same day.
+**How it works:**
+Each card carries two persistent memory state values:
+- **Stability (S)** — the number of days until recall probability drops to 90%. Grows after each successful review; shrinks sharply after a lapse.
+- **Difficulty (D)** — how inherently hard this card is for the user (range 1–10). Adjusted after every review based on grade.
 
-The scheduling config must be user-editable in a Settings screen.
-Architecture must allow adding FSRS (DSR model) as a second algorithm option
-in the future without rewriting the review session UI.
+A third value, **Retrievability (R)**, is computed on demand from elapsed time and S — it represents the current probability of recall. Cards are scheduled so that R at review time equals the user's **target retention** (default 90%).
+
+**Review flow:**
+1. Before updating, compute current R from elapsed days and S.
+2. Update D based on grade (Again increases difficulty, Easy decreases it; Good keeps it stable).
+3. Update S: successful reviews (Hard/Good/Easy) grow S based on D, S, and R; a lapse (Again) sharply reduces S.
+4. Compute the next interval by inverting the forgetting curve: the number of days at which `R = targetRetention`.
+5. Optionally apply fuzz (±10%) to spread cards that were created together.
+
+**Parameters:** All formulas are controlled by a fixed vector of 21 weights (`w`). The defaults are Mochi's trained values. Users can override them in Settings but this requires trained data; the defaults are correct for general use.
+
+**User-configurable settings:** target retention rate, max interval (365 days), w parameters, apply fuzzing.
 
 ### Tagging
 
@@ -223,7 +229,8 @@ On submit the frontend:
 | `aiExample` | LLM (one sentence) | No |
 | `audioUrl` | TTS | No |
 | `tags` | User | Yes |
-| `interval`, `dueDate` | Scheduling algorithm | No |
+| `interval`, `dueDate` | FSRS scheduler | No |
+| `stability`, `difficulty` | FSRS scheduler | No |
 
 ### Tags (future)
 
