@@ -38,6 +38,7 @@
                 </span>
               </th>
             </template>
+            <th class="card-table__th card-table__th--actions"></th>
           </tr>
         </thead>
         <tbody>
@@ -80,11 +81,21 @@
                 <template v-else>{{ getCellText(card, colDef.id) }}</template>
               </td>
             </template>
+            <td class="card-table__td card-table__td--actions" @click.stop>
+              <CardActionMenu :card="card" @edit="editingCard = card" />
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
   </template>
+
+  <CardEditModal
+    v-if="editingCard"
+    :card="editingCard"
+    @saved="editingCard = null"
+    @close="editingCard = null"
+  />
 </template>
 
 <script setup lang="ts">
@@ -95,6 +106,8 @@ import { formatDate } from '../utils/formatDate'
 import { getCardDueStatus } from '../utils/cardStatus'
 import { useSettingsStore } from '../stores/settings'
 import AppButton from './AppButton.vue'
+import CardActionMenu from './CardActionMenu.vue'
+import CardEditModal from './CardEditModal.vue'
 
 interface ColumnDef {
   id: TableColumnId
@@ -123,6 +136,7 @@ const emit = defineEmits<{
 }>()
 
 const settingsStore = useSettingsStore()
+const editingCard = ref<Card | null>(null)
 
 const ALL_COLUMN_DEFS: ColumnDef[] = ALL_TABLE_COLUMNS.map(id => COLUMN_DEFS[id])
 
@@ -344,6 +358,13 @@ function playAudio(card: Card): void {
 
 .card-table__th--audio,
 .card-table__td--audio {
+  width: 40px;
+  padding: 0 var(--space-2);
+  text-align: center;
+}
+
+.card-table__th--actions,
+.card-table__td--actions {
   width: 40px;
   padding: 0 var(--space-2);
   text-align: center;

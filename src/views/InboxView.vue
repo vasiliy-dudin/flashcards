@@ -53,6 +53,13 @@
           aria-label="Play pronunciation"
           @click.stop="playAudio"
         >▶ Play</AppButton>
+        <CardActionMenu
+          :card="(currentCard as Card)"
+          size="md"
+          @edit="editingCard = currentCard ?? null"
+          @deleted="onCardDeleted"
+          @updated="onCardUpdated"
+        />
       </div>
 
       <div v-if="isFlipped" class="inbox__actions">
@@ -63,6 +70,12 @@
       </div>
       <p v-else class="inbox__hint">Click the card to reveal</p>
     </template>
+    <CardEditModal
+      v-if="editingCard"
+      :card="editingCard"
+      @saved="onCardEditSaved"
+      @close="editingCard = null"
+    />
   </main>
 </template>
 
@@ -70,6 +83,8 @@
 import { computed, onMounted, ref } from 'vue'
 import type { Card } from '../types'
 import AppButton from '../components/AppButton.vue'
+import CardActionMenu from '../components/CardActionMenu.vue'
+import CardEditModal from '../components/CardEditModal.vue'
 import { useCardsStore } from '../stores/cards'
 import { useSettingsStore } from '../stores/settings'
 import { scheduleCardFsrs, type FsrsGrade } from '../utils/fsrs'
@@ -88,6 +103,7 @@ const queue = ref<Card[]>([])
 const totalCount = ref(0)
 const isFlipped = ref(false)
 const persistError = ref('')
+const editingCard = ref<Card | null>(null)
 
 const currentCard = computed<Card | undefined>(() => queue.value[0])
 const reviewedCount = computed<number>(() => totalCount.value - queue.value.length)
@@ -174,6 +190,28 @@ async function submitReview(grade: FsrsGrade): Promise<void> {
   cardsStore.updateCard(card.id, patch)
   queue.value = queue.value.slice(1)
   isFlipped.value = false
+}
+
+function onCardDeleted(): void {
+  queue.value = queue.value.slice(1)
+  totalCount.value = Math.max(0, totalCount.value - 1)
+  isFlipped.value = false
+}
+
+function onCardUpdated(updated: Card): void {
+  if (queue.value.length === 0) return
+  if (updated.archived || !updated.inReview) {
+    onCardDeleted()
+  } else {
+    queue.value = [updated, ...queue.value.slice(1)]
+  }
+}
+
+function onCardEditSaved(updated: Card): void {
+  editingCard.value = null
+  if (queue.value.length > 0 && queue.value[0].id === updated.id) {
+    queue.value = [updated, ...queue.value.slice(1)]
+  }
 }
 </script>
 
@@ -318,7 +356,9 @@ async function submitReview(grade: FsrsGrade): Promise<void> {
   width: 100%;
   max-width: 640px;
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 8px;
   min-height: 36px;
 }
 

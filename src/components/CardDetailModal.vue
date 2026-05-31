@@ -56,42 +56,13 @@
             <span>Interval: {{ card.interval }}d</span>
           </div>
           <div class="card-detail__footer-actions">
-            <template v-if="showDeleteConfirm">
-              <span class="card-detail__confirm-text">Delete this card?</span>
-              <AppButton variant="secondary" size="sm" @click="showDeleteConfirm = false">Cancel</AppButton>
-              <AppButton variant="danger-subtle" size="sm" :disabled="isDeleting" @click="handleDelete">
-                {{ isDeleting ? 'Deleting…' : 'Confirm' }}
-              </AppButton>
-            </template>
-            <template v-else>
-              <AppButton variant="ghost-subtle" size="sm" @click="showEditModal = true">Edit</AppButton>
-              <div class="card-detail__actions-menu" ref="actionsMenuEl">
-                <AppButton variant="ghost-subtle" size="sm" @click="toggleActionsMenu">Actions ▾</AppButton>
-                <div v-if="actionsMenuOpen" class="card-detail__actions-dropdown">
-                  <button
-                    class="card-detail__menu-item"
-                    :disabled="isUpdating"
-                    @click="onMenuToggleReview"
-                  >{{ card.inReview ? 'Remove from review' : 'Send to review' }}</button>
-                  <button
-                    v-if="card.inReview"
-                    class="card-detail__menu-item"
-                    :disabled="isUpdating"
-                    @click="onMenuResetProgress"
-                  >Reset progress</button>
-                  <button
-                    class="card-detail__menu-item"
-                    :disabled="isUpdating"
-                    @click="onMenuToggleArchive"
-                  >{{ card.archived ? 'Unarchive' : 'Archive' }}</button>
-                  <hr class="card-detail__menu-divider" />
-                  <button
-                    class="card-detail__menu-item card-detail__menu-item--danger"
-                    @click="onMenuDelete"
-                  >Delete</button>
-                </div>
-              </div>
-            </template>
+            <AppButton variant="ghost" size="sm" @click="showEditModal = true">Edit</AppButton>
+            <CardActionMenu
+              :card="card"
+              :show-edit="false"
+              @deleted="close()"
+              @updated="emit('card-updated', $event)"
+            />
           </div>
         </footer>
 
@@ -111,10 +82,8 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import type { Card } from '../types'
 import { formatDate } from '../utils/formatDate'
 import CardEditModal from './CardEditModal.vue'
+import CardActionMenu from './CardActionMenu.vue'
 import AppButton from './AppButton.vue'
-import { deleteCard as deleteCardApi, updateCard as updateCardApi } from '../api/cards'
-import { useCardsStore } from '../stores/cards'
-import { useTagsStore } from '../stores/tags'
 
 const props = defineProps<{ modelValue: boolean; card: Card }>()
 const emit = defineEmits<{
@@ -122,58 +91,7 @@ const emit = defineEmits<{
   'card-updated': [card: Card]
 }>()
 
-const cardsStore = useCardsStore()
-const tagsStore = useTagsStore()
-
 const showEditModal = ref(false)
-const showDeleteConfirm = ref(false)
-const isDeleting = ref(false)
-const isUpdating = ref(false)
-
-const actionsMenuOpen = ref(false)
-const actionsMenuEl = ref<HTMLElement | null>(null)
-
-function onActionsMenuDocumentClick(e: MouseEvent): void {
-  if (actionsMenuEl.value && !actionsMenuEl.value.contains(e.target as Node)) {
-    closeActionsMenu()
-  }
-}
-
-function openActionsMenu(): void {
-  actionsMenuOpen.value = true
-  setTimeout(() => {
-    document.addEventListener('click', onActionsMenuDocumentClick)
-  }, 0)
-}
-
-function closeActionsMenu(): void {
-  actionsMenuOpen.value = false
-  document.removeEventListener('click', onActionsMenuDocumentClick)
-}
-
-function toggleActionsMenu(): void {
-  actionsMenuOpen.value ? closeActionsMenu() : openActionsMenu()
-}
-
-function onMenuToggleReview(): void {
-  closeActionsMenu()
-  toggleReview()
-}
-
-function onMenuResetProgress(): void {
-  closeActionsMenu()
-  resetProgress()
-}
-
-function onMenuToggleArchive(): void {
-  closeActionsMenu()
-  toggleArchive()
-}
-
-function onMenuDelete(): void {
-  closeActionsMenu()
-  showDeleteConfirm.value = true
-}
 
 function close(): void {
   emit('update:modelValue', false)
@@ -190,68 +108,11 @@ function onOverlayMouseUp(e: MouseEvent): void {
   overlayMouseDowned = false
 }
 
-async function toggleReview(): Promise<void> {
-  if (isUpdating.value) return
-  isUpdating.value = true
-  try {
-    const updated = await updateCardApi(props.card.id, { inReview: !props.card.inReview })
-    cardsStore.updateCard(props.card.id, { inReview: updated.inReview })
-    emit('card-updated', updated)
-  } catch (err) {
-    console.error('[CardDetailModal] toggleReview failed:', props.card.id, err)
-  } finally {
-    isUpdating.value = false
-  }
-}
-
-async function resetProgress(): Promise<void> {
-  if (isUpdating.value) return
-  isUpdating.value = true
-  const today = new Date().toISOString().slice(0, 10)
-  try {
-    const updated = await updateCardApi(props.card.id, { interval: 1, dueDate: today })
-    cardsStore.updateCard(props.card.id, { interval: 1, dueDate: today })
-    emit('card-updated', updated)
-  } catch (err) {
-    console.error('[CardDetailModal] resetProgress failed:', props.card.id, err)
-  } finally {
-    isUpdating.value = false
-  }
-}
-
-async function toggleArchive(): Promise<void> {
-  if (isUpdating.value) return
-  isUpdating.value = true
-  try {
-    const updated = await updateCardApi(props.card.id, { archived: !props.card.archived })
-    cardsStore.updateCard(props.card.id, { archived: updated.archived })
-    emit('card-updated', updated)
-  } catch (err) {
-    console.error('[CardDetailModal] toggleArchive failed:', props.card.id, err)
-  } finally {
-    isUpdating.value = false
-  }
-}
-
 function playAudio(): void {
   if (!props.card.audioUrl) return
   new Audio(props.card.audioUrl).play().catch(err => {
     console.error('[CardDetailModal] Audio playback failed:', props.card.word, err)
   })
-}
-
-async function handleDelete(): Promise<void> {
-  isDeleting.value = true
-  try {
-    await deleteCardApi(props.card.id)
-    props.card.tags.forEach(tag => tagsStore.decrementTag(tag))
-    cardsStore.removeCard(props.card.id)
-    close()
-  } catch (err) {
-    console.error('[CardDetailModal] Delete failed:', props.card.id, err)
-  } finally {
-    isDeleting.value = false
-  }
 }
 
 function onCardSaved(updated: Card): void {
@@ -264,10 +125,7 @@ function handleKeydown(e: KeyboardEvent): void {
 }
 
 onMounted(() => document.addEventListener('keydown', handleKeydown))
-onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeydown)
-  closeActionsMenu()
-})
+onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
 </script>
 
 <style lang="scss" scoped>
@@ -405,57 +263,5 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-}
-
-.card-detail__confirm-text {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-}
-
-.card-detail__actions-menu {
-  position: relative;
-}
-
-.card-detail__actions-dropdown {
-  position: absolute;
-  bottom: calc(100% + var(--space-1));
-  right: 0;
-  z-index: var(--z-index-dropdown);
-  min-width: 180px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-1);
-  box-shadow: var(--shadow-md);
-  display: flex;
-  flex-direction: column;
-}
-
-.card-detail__menu-item {
-  width: 100%;
-  text-align: left;
-  padding: var(--space-2) var(--space-3);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-  &:hover:not(:disabled) { background-color: var(--color-surface-2); }
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  &--danger {
-    color: var(--color-danger);
-    &:hover:not(:disabled) {
-      background-color: color-mix(in srgb, var(--color-danger) 10%, transparent);
-    }
-  }
-}
-
-.card-detail__menu-divider {
-  margin: var(--space-1) 0;
-  border: none;
-  border-top: 1px solid var(--color-border);
 }
 </style>
