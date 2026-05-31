@@ -13,6 +13,8 @@ import generateAudio from './routes/generate-audio.js'
 import importMochi from './routes/import-mochi.js'
 import audioBackfill from './routes/audio-backfill.js'
 import authRoute from './routes/auth.js'
+import backupRoute from './routes/backup.js'
+import restoreRoute from './routes/restore.js'
 
 const PORT = 3030
 const ENCRYPTION_KEY_LENGTH = 32
@@ -68,6 +70,8 @@ app.route('/api/generate-card-content', generateCardContent)
 app.route('/api/generate-audio', generateAudio)
 app.route('/api/import/mochi', importMochi)
 app.route('/api/audio/backfill', audioBackfill)
+app.route('/api/backup', backupRoute)
+app.route('/api/restore', restoreRoute)
 
 if (process.env.NODE_ENV !== 'production') {
   seedDevData()

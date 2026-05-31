@@ -180,6 +180,39 @@
     </section>
 
     <section class="settings-section">
+      <h3 class="settings-section__title">Data</h3>
+
+      <div class="settings-field">
+        <div>
+          <p class="settings-toggle-field__name">Export backup</p>
+          <p class="settings-toggle-field__desc">Download a ZIP file containing all cards, decks, audio files, and settings.</p>
+        </div>
+        <AppButton variant="ghost" class="settings__import-btn" :disabled="backupInProgress" @click="handleExportBackup">
+          {{ backupInProgress ? 'Exporting…' : 'Export…' }}
+        </AppButton>
+      </div>
+      <p v-if="backupError" class="settings-sync-meta settings-sync-meta--error">{{ backupError }}</p>
+
+      <div class="settings-field">
+        <div>
+          <p class="settings-toggle-field__name">Restore from backup</p>
+          <p class="settings-toggle-field__desc">Replace all data with the contents of a previously exported backup ZIP. This cannot be undone.</p>
+        </div>
+        <input
+          ref="restoreFileInput"
+          type="file"
+          accept=".zip"
+          class="settings-file-input"
+          @change="handleRestoreFileSelected"
+        />
+        <AppButton variant="ghost" class="settings__import-btn" :disabled="restoreInProgress" @click="restoreFileInput?.click()">
+          {{ restoreInProgress ? 'Restoring…' : 'Restore…' }}
+        </AppButton>
+      </div>
+      <p v-if="restoreError" class="settings-sync-meta settings-sync-meta--error">{{ restoreError }}</p>
+    </section>
+
+    <section class="settings-section">
       <h3 class="settings-section__title">Offline</h3>
 
       <div class="settings-field">
@@ -227,6 +260,7 @@ import { fetchAllDecks } from '../api/decks'
 import { fetchAllTags } from '../api/tags'
 import type { SettingsConfig } from '../types'
 import type { MochiImportResult } from '../api/import'
+import { downloadBackup, restoreFromBackup } from '../api/backup'
 import ImportMochiModal from '../components/ImportMochiModal.vue'
 import AppButton from '../components/AppButton.vue'
 import { useOnline } from '../composables/useOnline'
@@ -241,6 +275,11 @@ const { settings } = storeToRefs(settingsStore)
 const { isOnline } = useOnline()
 
 const showImportModal = ref(false)
+const backupInProgress = ref(false)
+const backupError = ref<string | null>(null)
+const restoreInProgress = ref(false)
+const restoreError = ref<string | null>(null)
+const restoreFileInput = ref<HTMLInputElement | null>(null)
 const syncInProgress = ref(false)
 const syncAudioDone = ref(0)
 const syncAudioTotal = ref(0)
@@ -279,6 +318,49 @@ async function startSync(): Promise<void> {
     console.error('[SettingsView] Sync failed:', err)
   } finally {
     syncInProgress.value = false
+  }
+}
+
+async function handleExportBackup(): Promise<void> {
+  backupInProgress.value = true
+  backupError.value = null
+  try {
+    await downloadBackup(settings.value)
+  } catch (err) {
+    backupError.value = err instanceof Error ? err.message : 'Export failed. Please try again.'
+    console.error('[SettingsView] Backup export failed:', err)
+  } finally {
+    backupInProgress.value = false
+  }
+}
+
+async function handleRestoreFileSelected(event: Event): Promise<void> {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  if (!window.confirm('This will replace all your cards, decks, and audio. This cannot be undone. Continue?')) {
+    if (restoreFileInput.value) restoreFileInput.value.value = ''
+    return
+  }
+  restoreInProgress.value = true
+  restoreError.value = null
+  try {
+    const restoredSettings = await restoreFromBackup(file)
+    settingsStore.updateSettings(restoredSettings)
+    localStorage.removeItem(LAST_SYNCED_KEY)
+    await downloadAll()
+    lastSynced.value = localStorage.getItem(LAST_SYNCED_KEY)
+    const [freshCards, freshDecks, freshTags] = await Promise.all([
+      fetchAllCards(), fetchAllDecks(), fetchAllTags(),
+    ])
+    cardsStore.setCards(freshCards)
+    decksStore.setDecks(freshDecks)
+    tagsStore.setTags(freshTags)
+  } catch (err) {
+    restoreError.value = err instanceof Error ? err.message : 'Restore failed. Please try again.'
+    console.error('[SettingsView] Restore failed:', err)
+  } finally {
+    restoreInProgress.value = false
+    if (restoreFileInput.value) restoreFileInput.value.value = ''
   }
 }
 
@@ -455,6 +537,14 @@ function onMaxIntervalChange(raw: string): void {
 .settings__import-btn {
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+.settings-file-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
 }
 
 .settings-sync-meta {
