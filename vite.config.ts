@@ -39,8 +39,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // Forward /api/* requests to the Node backend during development
+      // Forward /api/* and /audio/* requests to the Node backend during development
       '/api': 'http://localhost:3030',
+      '/audio': 'http://localhost:3030',
     },
   },
   test: {

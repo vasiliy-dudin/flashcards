@@ -1,4 +1,5 @@
 import { serve } from '@hono/node-server'
+import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { sessionMiddleware, CookieStore } from 'hono-sessions'
@@ -38,6 +39,9 @@ const app = new Hono<{ Variables: AppVariables }>()
 
 // Allow requests from the Vite dev server during development
 app.use(cors())
+
+// Serve generated audio files — must be before auth middleware since audio needs no auth
+app.use('/audio/*', serveStatic({ root: './data' }))
 
 app.use(sessionMiddleware({
   store,
