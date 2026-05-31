@@ -41,9 +41,9 @@
         </button>
         <div v-if="tagsOpen" class="tag-filter__panel">
           <p v-if="availableTags.length === 0" class="tag-filter__empty">No tags in this deck</p>
-          <label v-for="tag in availableTags" :key="tag" class="tag-filter__option">
-            <input type="checkbox" :value="tag" v-model="selectedTags" />
-            {{ tag }}
+          <label v-for="item in availableTags" :key="item.tag" class="tag-filter__option">
+            <input type="checkbox" :value="item.tag" v-model="selectedTags" />
+            {{ item.tag }} ({{ item.count }})
           </label>
         </div>
       </div>
@@ -118,10 +118,10 @@ const deckCards = computed(() =>
   cardsStore.cards.filter(c => c.deckId === deckId.value)
 )
 
-const availableTags = computed<string[]>(() => {
-  const tagSet = new Set<string>()
-  deckCards.value.forEach(c => c.tags.forEach(t => tagSet.add(t)))
-  return [...tagSet].sort()
+const availableTags = computed<{ tag: string; count: number }[]>(() => {
+  const counts = new Map<string, number>()
+  deckCards.value.forEach(c => c.tags.forEach(t => counts.set(t, (counts.get(t) ?? 0) + 1)))
+  return [...counts.entries()].map(([tag, count]) => ({ tag, count })).sort((a, b) => a.tag.localeCompare(b.tag))
 })
 
 const searchText = ref('')
