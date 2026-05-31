@@ -1,15 +1,13 @@
 import { Hono } from 'hono'
 import { mkdirSync, writeFileSync, rmSync, renameSync, unlinkSync, existsSync } from 'fs'
-import { join, dirname, basename } from 'path'
-import { fileURLToPath } from 'url'
+import { join, basename, resolve } from 'path'
 import { unzipSync, strFromU8 } from 'fflate'
 import { reconnectDb } from '../db/index.js'
 import type { BackupManifest } from '../types/backup.js'
 
-const ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
-const AUDIO_DIR = join(ROOT_DIR, 'data', 'audio')
-const AUDIO_STAGING_DIR = join(ROOT_DIR, 'data', 'audio.restore')
-const TMP_DB_PATH = join(ROOT_DIR, 'data', 'flashcards.db.restore')
+const AUDIO_DIR = resolve(process.cwd(), 'data', 'audio')
+const AUDIO_STAGING_DIR = resolve(process.cwd(), 'data', 'audio.restore')
+const TMP_DB_PATH = resolve(process.cwd(), 'data', 'flashcards.db.restore')
 
 const MAX_RESTORE_SIZE = 500 * 1024 * 1024
 

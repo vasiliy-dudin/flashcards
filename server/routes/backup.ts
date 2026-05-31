@@ -1,16 +1,14 @@
 import { Hono } from 'hono'
 import { readFileSync, existsSync, unlinkSync } from 'fs'
-import { join, basename, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { join, basename, resolve } from 'path'
 import { zipSync, strToU8, type Zippable, type ZipDeflateOptions } from 'fflate'
 import { isNotNull, sql } from 'drizzle-orm'
 import { db, backupDb } from '../db/index.js'
 import { cards } from '../db/schema.js'
 import type { BackupManifest } from '../types/backup.js'
 
-const ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
-const AUDIO_DIR = join(ROOT_DIR, 'data', 'audio')
-const TMP_DB_PATH = join(ROOT_DIR, 'data', 'flashcards.db.backup.tmp')
+const AUDIO_DIR = resolve(process.cwd(), 'data', 'audio')
+const TMP_DB_PATH = resolve(process.cwd(), 'data', 'flashcards.db.backup.tmp')
 
 const STORE: ZipDeflateOptions = { level: 0 }
 const DEFLATE: ZipDeflateOptions = { level: 6 }
