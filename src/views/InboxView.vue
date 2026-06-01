@@ -24,24 +24,51 @@
 
     <template v-else>
       <div class="inbox__stage">
-        <div
-          class="inbox__flipper"
-          :class="{ 'is-flipped': isFlipped }"
-          @click="flipCard"
-        >
-          <div class="inbox__face inbox__face--front">
+        <div class="inbox__card">
+          <div class="inbox__card-front">
             <span v-if="!isReverse" class="inbox__word">{{ currentCard.word }}</span>
             <p v-else class="inbox__definition">{{ currentCard.definition }}</p>
           </div>
-          <div class="inbox__face inbox__face--back">
-            <span class="inbox__word">{{ currentCard.word }}</span>
-            <p class="inbox__definition">{{ currentCard.definition }}</p>
-            <ul v-if="currentCard.examples.length > 0" class="inbox__examples">
-              <li v-for="example in currentCard.examples" :key="example">{{ example }}</li>
-            </ul>
-            <p v-if="currentCard.aiExample" class="inbox__notes">
-              {{ currentCard.aiExample }}
-            </p>
+          <button v-if="!isRevealed" class="inbox__reveal-trigger" @click="revealCard">
+            Show answer ▾
+          </button>
+          <div class="inbox__card-reveal" :class="{ 'is-revealed': isRevealed }">
+            <div class="inbox__card-reveal-inner">
+              <div class="inbox__reveal-section">
+                <span v-if="isReverse" class="inbox__word">{{ currentCard.word }}</span>
+                <p v-else class="inbox__reveal-text">{{ currentCard.definition }}</p>
+              </div>
+
+              <section v-if="currentCard.examples.length > 0" class="inbox__reveal-section">
+                <h3 class="inbox__reveal-label">Examples</h3>
+                <ul class="inbox__examples">
+                  <li v-for="example in currentCard.examples" :key="example">{{ example }}</li>
+                </ul>
+              </section>
+
+              <section v-if="currentCard.tags.length > 0" class="inbox__reveal-section">
+                <h3 class="inbox__reveal-label">Tags</h3>
+                <div class="inbox__reveal-tags">
+                  <span v-for="tag in currentCard.tags" :key="tag" class="inbox__reveal-tag">{{ tag }}</span>
+                </div>
+              </section>
+
+              <p v-if="currentCard.dictionary.transcription" class="inbox__reveal-transcription">
+                {{ currentCard.dictionary.transcription }}
+              </p>
+
+              <section v-if="currentCard.dictionary.meanings.length > 0" class="inbox__reveal-section">
+                <h3 class="inbox__reveal-label">Dictionary</h3>
+                <ol class="inbox__reveal-meanings">
+                  <li v-for="meaning in currentCard.dictionary.meanings" :key="meaning">{{ meaning }}</li>
+                </ol>
+              </section>
+
+              <section v-if="currentCard.aiExample" class="inbox__reveal-section">
+                <h3 class="inbox__reveal-label">AI Example</h3>
+                <p class="inbox__notes">{{ currentCard.aiExample }}</p>
+              </section>
+            </div>
           </div>
         </div>
       </div>
@@ -62,13 +89,12 @@
         />
       </div>
 
-      <div v-if="isFlipped" class="inbox__actions">
+      <div v-if="isRevealed" class="inbox__actions">
         <AppButton variant="danger" size="lg" class="inbox__action-btn" @click="submitReview(1)">Again</AppButton>
         <AppButton variant="secondary" size="lg" class="inbox__action-btn" @click="submitReview(2)">Hard</AppButton>
         <AppButton variant="success" size="lg" class="inbox__action-btn" @click="submitReview(3)">Good</AppButton>
         <AppButton variant="primary" size="lg" class="inbox__action-btn" @click="submitReview(4)">Easy</AppButton>
       </div>
-      <p v-else class="inbox__hint">Click the card to reveal</p>
     </template>
     <CardEditModal
       v-if="editingCard"
@@ -101,7 +127,7 @@ const { isOnline } = useOnline()
 
 const queue = ref<Card[]>([])
 const totalCount = ref(0)
-const isFlipped = ref(false)
+const isRevealed = ref(false)
 const persistError = ref('')
 const editingCard = ref<Card | null>(null)
 
@@ -136,9 +162,8 @@ function toggleAutoPlay(): void {
   settingsStore.updateSettings({ autoPlayAudio: !settingsStore.settings.autoPlayAudio })
 }
 
-function flipCard(): void {
-  if (isFlipped.value) return
-  isFlipped.value = true
+function revealCard(): void {
+  isRevealed.value = true
   if (settingsStore.settings.autoPlayAudio) playAudio()
 }
 
@@ -189,13 +214,13 @@ async function submitReview(grade: FsrsGrade): Promise<void> {
   if (!await persistReview(card, patch)) return
   cardsStore.updateCard(card.id, patch)
   queue.value = queue.value.slice(1)
-  isFlipped.value = false
+  isRevealed.value = false
 }
 
 function onCardDeleted(): void {
   queue.value = queue.value.slice(1)
   totalCount.value = Math.max(0, totalCount.value - 1)
-  isFlipped.value = false
+  isRevealed.value = false
 }
 
 function onCardUpdated(updated: Card): void {
@@ -204,6 +229,7 @@ function onCardUpdated(updated: Card): void {
     onCardDeleted()
   } else {
     queue.value = [updated, ...queue.value.slice(1)]
+    isRevealed.value = false
   }
 }
 
@@ -262,44 +288,108 @@ function onCardEditSaved(updated: Card): void {
 }
 
 .inbox__stage {
-  perspective: 1200px;
   width: 100%;
   max-width: 640px;
 }
 
-.inbox__flipper {
-  position: relative;
-  height: var(--card-flip-height);
-  transform-style: preserve-3d;
-  transition: transform 0.4s ease;
-  cursor: pointer;
-
-  &.is-flipped {
-    transform: rotateY(180deg);
-  }
-}
-
-.inbox__face {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
+.inbox__card {
+  width: 100%;
   border-radius: var(--radius-lg);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.inbox__card-front {
+  padding: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+}
+
+.inbox__reveal-trigger {
+  width: 100%;
+  padding: var(--space-3) var(--space-6);
+  border: none;
+  border-top: 1px solid var(--color-border);
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  text-align: center;
+  user-select: none;
+
+  &:hover {
+    background-color: color-mix(in srgb, var(--color-text-muted) 6%, transparent);
+    color: var(--color-text);
+  }
+}
+
+.inbox__card-reveal {
+  overflow: hidden;
+  max-height: 0;
+
+  &.is-revealed {
+    max-height: 2000px;
+    transition: max-height 0.35s ease;
+  }
+}
+
+.inbox__card-reveal-inner {
+  border-top: 1px solid var(--color-border);
   padding: var(--space-6);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  overflow-y: auto;
 }
 
-.inbox__face--front {
-  align-items: center;
-  justify-content: center;
+.inbox__reveal-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
-.inbox__face--back {
-  transform: rotateY(180deg);
+.inbox__reveal-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.inbox__reveal-text {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+}
+
+.inbox__reveal-transcription {
+  font-size: var(--font-size-base);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.inbox__reveal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.inbox__reveal-tag {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  background-color: var(--color-surface-2);
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-full);
+}
+
+.inbox__reveal-meanings {
+  margin: 0;
+  padding-left: var(--space-4);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+
+  li + li { margin-top: var(--space-1); }
 }
 
 .inbox__word {
@@ -337,11 +427,6 @@ function onCardEditSaved(updated: Card): void {
   max-width: 640px;
 }
 
-.inbox__hint {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
-
 .inbox__autoplay-toggle {
   display: flex;
   align-items: center;
@@ -358,7 +443,7 @@ function onCardEditSaved(updated: Card): void {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 36px;
 }
 
@@ -394,10 +479,6 @@ function onCardEditSaved(updated: Card): void {
 
   .inbox__word {
     font-size: var(--font-size-xl);
-  }
-
-  .inbox__face {
-    padding: var(--space-4);
   }
 }
 </style>
