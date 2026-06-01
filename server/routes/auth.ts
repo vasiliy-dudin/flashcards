@@ -10,6 +10,11 @@ type AppVariables = {
 
 const app = new Hono<{ Variables: AppVariables }>()
 
+app.get('/check', (c) => {
+  const session = c.get('session')
+  return c.json({ authenticated: session.get('authenticated') === true })
+})
+
 app.post('/login', async (c) => {
   let body: unknown
   try { body = await c.req.json() } catch {

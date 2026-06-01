@@ -51,6 +51,7 @@ app.use(sessionMiddleware({
     sameSite: 'Lax',
     path: '/',
     httpOnly: true,
+    maxAge: 60 * 60 * 24 * 30, // 30-day sliding window; re-sent on every API response
   },
 }))
 

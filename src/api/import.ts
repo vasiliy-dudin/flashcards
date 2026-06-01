@@ -1,3 +1,5 @@
+import { apiFetch } from './fetch'
+
 export interface MochiImportResult {
   imported: number
   skipped: number
@@ -7,7 +9,7 @@ export interface MochiImportResult {
 export async function importMochiFile(file: File): Promise<MochiImportResult> {
   const body = new FormData()
   body.append('file', file)
-  const res = await fetch('/api/import/mochi', { method: 'POST', body })
+  const res = await apiFetch('/api/import/mochi', { method: 'POST', body })
   if (!res.ok) {
     const data = await res.json().catch(() => ({})) as { error?: string }
     throw new Error(data.error ?? `Import failed: ${res.status}`)

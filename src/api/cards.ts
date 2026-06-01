@@ -1,13 +1,14 @@
 import type { Card } from '../types'
+import { apiFetch } from './fetch'
 
 export async function fetchAllCards(): Promise<Card[]> {
-  const res = await fetch('/api/cards')
+  const res = await apiFetch('/api/cards')
   if (!res.ok) throw new Error(`Failed to fetch cards: ${res.status}`)
   return res.json() as Promise<Card[]>
 }
 
 export async function createCard(card: Card): Promise<Card> {
-  const res = await fetch('/api/cards', {
+  const res = await apiFetch('/api/cards', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(card),
@@ -17,7 +18,7 @@ export async function createCard(card: Card): Promise<Card> {
 }
 
 export async function updateCard(id: string, patch: Partial<Card>): Promise<Card> {
-  const res = await fetch(`/api/cards/${id}`, {
+  const res = await apiFetch(`/api/cards/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(patch),
@@ -27,6 +28,6 @@ export async function updateCard(id: string, patch: Partial<Card>): Promise<Card
 }
 
 export async function deleteCard(id: string): Promise<void> {
-  const res = await fetch(`/api/cards/${id}`, { method: 'DELETE' })
+  const res = await apiFetch(`/api/cards/${id}`, { method: 'DELETE' })
   if (!res.ok) throw new Error(`Failed to delete card ${id}: ${res.status}`)
 }

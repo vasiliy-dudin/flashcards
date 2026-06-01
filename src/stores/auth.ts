@@ -20,11 +20,29 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem(STORAGE_KEY, 'true')
   }
 
-  function logout(): void {
+  function clearAuthState(): void {
     isAuthenticated.value = false
     localStorage.removeItem(STORAGE_KEY)
+  }
+
+  function logout(): void {
+    clearAuthState()
     fetch('/api/auth/logout', { method: 'POST' }).catch(() => undefined)
   }
 
-  return { isAuthenticated, login, logout }
+  async function initialize(): Promise<void> {
+    if (!isAuthenticated.value || !navigator.onLine) return
+    try {
+      const res = await fetch('/api/auth/check')
+      if (!res.ok) return
+      const data = await res.json() as { authenticated: boolean }
+      if (!data.authenticated) {
+        clearAuthState()
+      }
+    } catch {
+      // Network error — keep current state; subsequent API calls will surface 401 if needed
+    }
+  }
+
+  return { isAuthenticated, login, logout, initialize, clearAuthState }
 })
