@@ -33,12 +33,11 @@
       >Archived</AppButton>
       <div class="tag-filter" ref="tagFilterEl">
         <button
-          class="tag-filter__toggle"
+          class="tag-filter__toggle has-dropdown-arrow"
           :class="{ 'has-selection': selectedTags.length > 0 }"
           @click="toggleTagsPanel"
         >
           Tags{{ selectedTags.length > 0 ? ` (${selectedTags.length})` : '' }}
-          {{ tagsOpen ? '▲' : '▼' }}
         </button>
         <div v-if="tagsOpen" class="tag-filter__panel">
           <p v-if="availableTags.length === 0" class="tag-filter__empty">No tags in this deck</p>
@@ -269,7 +268,10 @@ function toggleTagsPanel(): void {
 }
 
 .tag-filter__toggle {
-  padding: var(--space-2) var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  padding: var(--space-2) var(--space-5) var(--space-2) var(--space-3);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -277,6 +279,7 @@ function toggleTagsPanel(): void {
   font-size: var(--font-size-sm);
   cursor: pointer;
   transition: border-color var(--transition-fast), color var(--transition-fast);
+
 
   &:hover,
   &.has-selection {

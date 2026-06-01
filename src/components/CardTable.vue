@@ -5,9 +5,7 @@
   <template v-else>
     <div class="card-table__toolbar">
       <div class="card-table__col-picker" ref="pickerEl">
-        <button class="card-table__col-btn" @click="togglePickerOpen()">
-          Columns ▾
-        </button>
+        <button class="card-table__col-btn has-dropdown-arrow" @click="togglePickerOpen()">Columns</button>
         <div v-if="pickerOpen" class="card-table__col-panel">
           <label v-for="colDef in ALL_COLUMN_DEFS" :key="colDef.id" class="card-table__col-option">
             <input
@@ -331,7 +329,10 @@ function playAudio(card: Card): void {
 }
 
 .card-table__col-btn {
-  padding: var(--space-2) var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  padding: var(--space-2) var(--space-5) var(--space-2) var(--space-3);
   background: transparent;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -339,6 +340,7 @@ function playAudio(card: Card): void {
   font-size: var(--font-size-sm);
   cursor: pointer;
   transition: border-color var(--transition-fast), color var(--transition-fast);
+
 
   &:hover {
     border-color: var(--color-primary);

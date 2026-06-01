@@ -1,5 +1,5 @@
 <template>
-  <div class="card-action-menu" ref="menuEl">
+  <div class="card-action-menu" ref="referenceEl">
     <AppButton variant="ghost" :size="size" aria-label="Card actions" @click="toggleMenu">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
         <circle cx="8" cy="3" r="1.5"/>
@@ -8,50 +8,53 @@
       </svg>
     </AppButton>
 
-    <div v-if="menuOpen" class="card-action-menu__dropdown">
-      <template v-if="showDeleteConfirm">
-        <span class="card-action-menu__confirm-text">Delete this card?</span>
-        <div class="card-action-menu__confirm-actions">
-          <button class="card-action-menu__item card-action-menu__item--secondary" @click="showDeleteConfirm = false">Cancel</button>
+    <Teleport to="body">
+      <div v-if="menuOpen" class="card-action-menu__dropdown" ref="floatingEl" :style="floatingStyles">
+        <template v-if="showDeleteConfirm">
+          <span class="card-action-menu__confirm-text">Delete this card?</span>
+          <div class="card-action-menu__confirm-actions">
+            <button class="card-action-menu__item card-action-menu__item--secondary" @click="showDeleteConfirm = false">Cancel</button>
+            <button
+              class="card-action-menu__item card-action-menu__item--danger"
+              :disabled="isDeleting"
+              @click="handleDelete"
+            >{{ isDeleting ? '…' : 'Confirm' }}</button>
+          </div>
+        </template>
+        <template v-else>
+          <button v-if="showEdit" class="card-action-menu__item" @click="onEdit">Edit</button>
+          <hr v-if="showEdit" class="card-action-menu__divider" />
+          <button
+            class="card-action-menu__item"
+            :disabled="isUpdating"
+            @click="onToggleReview"
+          >{{ card.inReview ? 'Remove from review' : 'Send to review' }}</button>
+          <button
+            v-if="card.inReview"
+            class="card-action-menu__item"
+            :disabled="isUpdating"
+            @click="onResetProgress"
+          >Reset progress</button>
+          <button
+            class="card-action-menu__item"
+            :disabled="isUpdating"
+            @click="onToggleArchive"
+          >{{ card.archived ? 'Unarchive' : 'Archive' }}</button>
+          <hr class="card-action-menu__divider" />
           <button
             class="card-action-menu__item card-action-menu__item--danger"
-            :disabled="isDeleting"
-            @click="handleDelete"
-          >{{ isDeleting ? '…' : 'Confirm' }}</button>
-        </div>
-      </template>
-      <template v-else>
-        <button v-if="showEdit" class="card-action-menu__item" @click="onEdit">Edit</button>
-        <hr v-if="showEdit" class="card-action-menu__divider" />
-        <button
-          class="card-action-menu__item"
-          :disabled="isUpdating"
-          @click="onToggleReview"
-        >{{ card.inReview ? 'Remove from review' : 'Send to review' }}</button>
-        <button
-          v-if="card.inReview"
-          class="card-action-menu__item"
-          :disabled="isUpdating"
-          @click="onResetProgress"
-        >Reset progress</button>
-        <button
-          class="card-action-menu__item"
-          :disabled="isUpdating"
-          @click="onToggleArchive"
-        >{{ card.archived ? 'Unarchive' : 'Archive' }}</button>
-        <hr class="card-action-menu__divider" />
-        <button
-          class="card-action-menu__item card-action-menu__item--danger"
-          :disabled="isUpdating"
-          @click="onDelete"
-        >Delete</button>
-      </template>
-    </div>
+            :disabled="isUpdating"
+            @click="onDelete"
+          >Delete</button>
+        </template>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue'
+import { useFloating, flip, shift, offset } from '@floating-ui/vue'
 import type { Card } from '../types'
 import { updateCard as updateCardApi, deleteCard as deleteCardApi } from '../api/cards'
 import { useCardsStore } from '../stores/cards'
@@ -76,10 +79,20 @@ const menuOpen = ref(false)
 const showDeleteConfirm = ref(false)
 const isUpdating = ref(false)
 const isDeleting = ref(false)
-const menuEl = ref<HTMLElement | null>(null)
+const referenceEl = ref<HTMLElement | null>(null)
+const floatingEl = ref<HTMLElement | null>(null)
+
+const { floatingStyles } = useFloating(referenceEl, floatingEl, {
+  placement: 'bottom-end',
+  strategy: 'fixed',
+  middleware: [offset(4), flip(), shift({ padding: 8 })],
+})
 
 function onDocumentClick(e: MouseEvent): void {
-  if (menuEl.value && !menuEl.value.contains(e.target as Node)) {
+  const target = e.target as Node
+  const inReference = referenceEl.value?.contains(target) ?? false
+  const inFloating = floatingEl.value?.contains(target) ?? false
+  if (!inReference && !inFloating) {
     closeMenu()
   }
 }
@@ -180,9 +193,6 @@ onUnmounted(() => closeMenu())
 }
 
 .card-action-menu__dropdown {
-  position: absolute;
-  bottom: calc(100% + var(--space-1));
-  right: 0;
   z-index: var(--z-index-dropdown);
   min-width: 170px;
   background-color: var(--color-surface);
