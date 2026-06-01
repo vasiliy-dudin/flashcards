@@ -9,6 +9,7 @@
           title="Toggle translation"
           @click="settingsStore.updateSettings({ showTranslation: !settingsStore.settings.showTranslation })"
         >T</AppButton>
+        <SortSelect v-model="sortValue" />
         <ViewToggle :model-value="viewMode" @update:model-value="uiStore.setViewMode" />
         <AppButton
           variant="primary"
@@ -42,8 +43,8 @@
       <AppButton variant="ghost" size="sm" @click="selectedIds = new Set()">Clear</AppButton>
     </div>
 
-    <CardGrid v-if="viewMode === 'grid'" :cards="filteredCards" v-model:selectedIds="selectedIds" @open="selectedCard = $event" />
-    <CardTable v-else :cards="filteredCards" v-model:selectedIds="selectedIds" @open="selectedCard = $event" />
+    <CardGrid v-if="viewMode === 'grid'" :cards="sortedFilteredCards" v-model:selectedIds="selectedIds" @open="selectedCard = $event" />
+    <CardTable v-else :cards="sortedFilteredCards" v-model:selectedIds="selectedIds" @open="selectedCard = $event" />
     <CardDetailModal v-if="selectedCard" :model-value="true" :card="selectedCard" @update:model-value="selectedCard = null" @card-updated="selectedCard = $event" />
     <AddCardModal v-if="showAddModal" v-model="showAddModal" deck-id="" :initial-tags="[tagName]" />
   </main>
@@ -51,7 +52,8 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { Card } from '../types'
+import type { Card, SortValue } from '../types'
+import { sortCards } from '../utils/sortCards'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { useCardsStore } from '../stores/cards'
@@ -64,6 +66,7 @@ import CardTable from '../components/CardTable.vue'
 import AddCardModal from '../components/AddCardModal.vue'
 import CardDetailModal from '../components/CardDetailModal.vue'
 import ViewToggle from '../components/ViewToggle.vue'
+import SortSelect from '../components/SortSelect.vue'
 import SearchInput from '../components/SearchInput.vue'
 import AppButton from '../components/AppButton.vue'
 import { useOnline } from '../composables/useOnline'
@@ -142,6 +145,10 @@ const filteredCards = computed(() => {
     return q === '' || c.word.toLowerCase().includes(q)
   })
 })
+
+const sortValue = ref<SortValue>('createdAt:desc')
+
+const sortedFilteredCards = computed(() => sortCards(filteredCards.value, sortValue.value))
 </script>
 
 <style lang="scss" scoped>

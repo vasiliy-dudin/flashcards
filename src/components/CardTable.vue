@@ -27,23 +27,14 @@
             <th class="card-table__th card-table__th--checkbox"></th>
             <template v-for="colDef in enabledColumnDefs" :key="colDef.id">
               <th v-if="colDef.id === 'transcription'" class="card-table__th card-table__th--audio"></th>
-              <th
-                class="card-table__th"
-                :class="{ 'is-sorted': sortKey === colDef.id }"
-                @click="setSort(colDef.id)"
-              >
-                {{ colDef.label }}
-                <span class="card-table__sort-icon">
-                  {{ sortKey === colDef.id ? (sortDir === 'asc' ? '↑' : '↓') : '↕' }}
-                </span>
-              </th>
+              <th class="card-table__th">{{ colDef.label }}</th>
             </template>
             <th class="card-table__th card-table__th--actions"></th>
           </tr>
         </thead>
         <tbody>
           <tr
-            v-for="card in sortedCards"
+            v-for="card in props.cards"
             :key="card.id"
             class="card-table__row"
             :class="{ 'is-selected': selectedIds.has(card.id) }"
@@ -124,8 +115,6 @@ const COLUMN_DEFS: Record<TableColumnId, ColumnDef> = {
   createdAt:     { id: 'createdAt',     label: 'Created' },
 }
 
-type SortDir = 'asc' | 'desc'
-
 const props = withDefaults(
   defineProps<{ cards: Card[]; selectedIds?: Set<string> }>(),
   { selectedIds: () => new Set<string>() }
@@ -177,37 +166,6 @@ function toggleColumn(id: TableColumnId): void {
   settingsStore.updateSettings({ enabledTableColumns: next })
 }
 
-const sortKey = ref<TableColumnId>('word')
-const sortDir = ref<SortDir>('asc')
-
-function setSort(key: TableColumnId): void {
-  if (sortKey.value === key) {
-    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortKey.value = key
-    sortDir.value = 'asc'
-  }
-}
-
-function compareCards(a: Card, b: Card, key: TableColumnId): number {
-  switch (key) {
-    case 'word':          return a.word.localeCompare(b.word)
-    case 'translation':   return a.definition.localeCompare(b.definition)
-    case 'transcription': return a.dictionary.transcription.localeCompare(b.dictionary.transcription)
-    case 'tags':          return a.tags.join(',').localeCompare(b.tags.join(','))
-    case 'interval':      return a.interval - b.interval
-    case 'dueDate':       return a.dueDate.localeCompare(b.dueDate)
-    case 'createdAt':     return a.createdAt.localeCompare(b.createdAt)
-  }
-}
-
-const sortedCards = computed<Card[]>(() =>
-  [...props.cards].sort((a, b) => {
-    const cmp = compareCards(a, b, sortKey.value)
-    return sortDir.value === 'asc' ? cmp : -cmp
-  })
-)
-
 const lastSelectedId = ref<string | null>(null)
 
 function toggleSelection(set: Set<string>, id: string): Set<string> {
@@ -218,7 +176,7 @@ function toggleSelection(set: Set<string>, id: string): Set<string> {
 }
 
 function rangeSelect(anchorId: string, targetId: string): Set<string> {
-  const ids = sortedCards.value.map(c => c.id)
+  const ids = props.cards.map(c => c.id)
   const from = ids.indexOf(anchorId)
   const to = ids.indexOf(targetId)
   if (from === -1 || to === -1) return new Set(props.selectedIds)
@@ -287,21 +245,7 @@ function playAudio(card: Card): void {
   font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
   border-bottom: 1px solid var(--color-border);
-  cursor: pointer;
-  user-select: none;
   white-space: nowrap;
-  transition: color var(--transition-fast);
-
-  &:hover,
-  &.is-sorted {
-    color: var(--color-text);
-  }
-}
-
-.card-table__sort-icon {
-  margin-left: var(--space-1);
-  font-size: var(--font-size-xs);
-  opacity: 0.5;
 }
 
 .card-table__row {

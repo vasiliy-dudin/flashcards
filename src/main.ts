@@ -23,9 +23,7 @@ async function bootstrap(): Promise<void> {
       try {
         await loadAllData()
       } catch (err) {
-        if (err instanceof SessionExpiredError) {
-          // apiFetch already cleared auth and initiated redirect to /login
-        } else {
+        if (!(err instanceof SessionExpiredError)) {
           console.error('[main] Failed to load data from server, falling back to cache:', err)
           await loadAllDataOffline()
         }

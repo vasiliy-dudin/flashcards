@@ -45,6 +45,10 @@ export interface Tag {
 
 export type Theme = 'dark' | 'light'
 
+export type SortKey = 'createdAt' | 'word' | 'dueDate' | 'interval'
+export type SortDir = 'asc' | 'desc'
+export type SortValue = `${SortKey}:${SortDir}`
+
 export type TableColumnId = 'word' | 'translation' | 'transcription' | 'tags' | 'interval' | 'dueDate' | 'createdAt'
 
 export const ALL_TABLE_COLUMNS: TableColumnId[] = ['word', 'translation', 'transcription', 'tags', 'interval', 'dueDate', 'createdAt']

@@ -2,7 +2,10 @@ import { router } from '../router/index'
 import { useAuthStore } from '../stores/auth'
 
 export class SessionExpiredError extends Error {
-  constructor() { super('Session expired') }
+  constructor() {
+    super('Session expired')
+    this.name = 'SessionExpiredError'
+  }
 }
 
 /** Fetch wrapper that intercepts 401 responses, clears auth state, and redirects to /login. */

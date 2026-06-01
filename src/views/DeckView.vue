@@ -12,6 +12,7 @@
           title="Toggle translation"
           @click="settingsStore.updateSettings({ showTranslation: !settingsStore.settings.showTranslation })"
         >T</AppButton>
+        <SortSelect v-model="sortValue" />
         <ViewToggle :model-value="viewMode" @update:model-value="uiStore.setViewMode" />
         <AppButton
           variant="primary"
@@ -62,13 +63,13 @@
 
     <CardGrid
       v-if="viewMode === 'grid'"
-      :cards="filteredCards"
+      :cards="sortedFilteredCards"
       v-model:selectedIds="selectedIds"
       @open="selectedCard = $event"
     />
     <CardTable
       v-else
-      :cards="filteredCards"
+      :cards="sortedFilteredCards"
       v-model:selectedIds="selectedIds"
       @open="selectedCard = $event"
     />
@@ -80,7 +81,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { Card } from '../types'
+import type { Card, SortValue } from '../types'
+import { sortCards } from '../utils/sortCards'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { useCardsStore } from '../stores/cards'
@@ -94,6 +96,7 @@ import CardTable from '../components/CardTable.vue'
 import AddCardModal from '../components/AddCardModal.vue'
 import CardDetailModal from '../components/CardDetailModal.vue'
 import ViewToggle from '../components/ViewToggle.vue'
+import SortSelect from '../components/SortSelect.vue'
 import SearchInput from '../components/SearchInput.vue'
 import AppButton from '../components/AppButton.vue'
 import { useOnline } from '../composables/useOnline'
@@ -197,6 +200,10 @@ const filteredCards = computed(() =>
     return matchesText && cardMatchesTags(card.tags)
   })
 )
+
+const sortValue = ref<SortValue>('createdAt:desc')
+
+const sortedFilteredCards = computed(() => sortCards(filteredCards.value, sortValue.value))
 
 watch(filteredCards, () => { selectedIds.value = new Set() })
 
