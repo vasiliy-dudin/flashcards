@@ -125,7 +125,7 @@ async function handleSubmit(): Promise<void> {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 101;
+  z-index: calc(var(--z-index-modal) + 1);
   background-color: var(--color-overlay);
   display: flex;
   align-items: center;

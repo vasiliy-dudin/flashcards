@@ -216,7 +216,7 @@ function onKeydown(e: KeyboardEvent): void {
 
 .tags-input__dropdown {
   position: fixed;
-  z-index: 200;
+  z-index: var(--z-index-floating);
   list-style: none;
   margin: 0;
   padding: var(--space-1) 0;

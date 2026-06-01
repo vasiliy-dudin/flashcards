@@ -193,7 +193,7 @@ onUnmounted(() => closeMenu())
 }
 
 .card-action-menu__dropdown {
-  z-index: var(--z-index-dropdown);
+  z-index: var(--z-index-floating);
   min-width: 170px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
