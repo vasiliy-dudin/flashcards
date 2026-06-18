@@ -16,7 +16,11 @@
         </span>
       </div>
       <div class="card-item__footer-actions" @click.stop>
+        <span v-if="isGenerating" class="spinner card-item__spinner" role="status">
+          <span class="sr-only">Generating AI data</span>
+        </span>
         <AppButton
+          v-else
           variant="ghost"
           size="icon"
           :disabled="!card.audioUrl"
@@ -42,6 +46,7 @@ import type { Card } from '../types'
 import { formatDate } from '../utils/formatDate'
 import { getCardDueStatus } from '../utils/cardStatus'
 import { useSettingsStore } from '../stores/settings'
+import { useCardsStore } from '../stores/cards'
 import AppButton from './AppButton.vue'
 import CardActionMenu from './CardActionMenu.vue'
 import CardEditModal from './CardEditModal.vue'
@@ -55,7 +60,10 @@ const { card } = defineProps<{ card: Card }>()
 const emit = defineEmits<{ open: [card: Card] }>()
 
 const settingsStore = useSettingsStore()
+const cardsStore = useCardsStore()
 const showEditModal = ref(false)
+
+const isGenerating = computed<boolean>(() => cardsStore.pendingGenerationIds.has(card.id))
 
 function leafSegment(tagPath: string): string {
   return tagPath.split('/').at(-1) ?? tagPath
@@ -171,6 +179,12 @@ function playAudio(): void {
   display: flex;
   align-items: center;
   gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.card-item__spinner {
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
 }
 </style>

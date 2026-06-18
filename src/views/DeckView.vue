@@ -56,6 +56,7 @@
       <AppButton variant="ghost" size="sm" :disabled="isBulkLoading" @click="bulkSendToReview">Send to review</AppButton>
       <AppButton variant="ghost" size="sm" :disabled="isBulkLoading" @click="bulkRemoveFromReview">Remove from review</AppButton>
       <AppButton variant="ghost" size="sm" :disabled="isBulkLoading" @click="bulkResetProgress">Reset progress</AppButton>
+      <AppButton variant="ghost" size="sm" :disabled="isBulkLoading" @click="bulkGenerateExamples">Generate AI data</AppButton>
       <AppButton variant="ghost-danger" size="sm" :disabled="isBulkLoading" @click="bulkDelete">Delete</AppButton>
       <AppButton variant="ghost" size="sm" @click="selectedIds = new Set()">Clear</AppButton>
     </div>
@@ -89,7 +90,7 @@ import { useDecksStore } from '../stores/decks'
 import { useTagsStore } from '../stores/tags'
 import { useUiStore } from '../stores/ui'
 import { useSettingsStore } from '../stores/settings'
-import { updateCard as updateCardApi, deleteCard as deleteCardApi } from '../api/cards'
+import { updateCard as updateCardApi, deleteCard as deleteCardApi, regenerateExample as regenerateExampleApi, generateContent as generateContentApi } from '../api/cards'
 import CardGrid from '../components/CardGrid.vue'
 import CardTable from '../components/CardTable.vue'
 import AddCardModal from '../components/AddCardModal.vue'
@@ -181,6 +182,26 @@ function bulkRemoveFromReview(): Promise<void> {
 function bulkResetProgress(): Promise<void> {
   const today = new Date().toISOString().slice(0, 10)
   return bulkUpdate({ interval: 1, dueDate: today })
+}
+
+async function bulkGenerateExamples(): Promise<void> {
+  if (isBulkLoading.value) return
+  isBulkLoading.value = true
+  const ids = [...selectedIds.value]
+  ids.forEach(id => cardsStore.startGenerating(id))
+  try {
+    const updated = await Promise.all(ids.map(id => {
+      const card = cardsStore.getCardById(id)
+      return card?.aiExample ? regenerateExampleApi(id) : generateContentApi(id)
+    }))
+    updated.forEach(card => cardsStore.updateCard(card.id, { dictionary: card.dictionary, aiExample: card.aiExample }))
+    selectedIds.value = new Set()
+  } catch (err) {
+    console.error('[DeckView] Bulk generate examples failed:', err)
+  } finally {
+    ids.forEach(id => cardsStore.stopGenerating(id))
+    isBulkLoading.value = false
+  }
 }
 
 function cardMatchesTags(cardTags: string[]): boolean {

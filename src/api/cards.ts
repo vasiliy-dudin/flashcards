@@ -37,3 +37,9 @@ export async function regenerateExample(id: string): Promise<Card> {
   if (!res.ok) throw new Error(`Failed to regenerate example for card ${id}: ${res.status}`)
   return res.json() as Promise<Card>
 }
+
+export async function generateContent(id: string): Promise<Card> {
+  const res = await apiFetch(`/api/cards/${id}/generate-content`, { method: 'POST' })
+  if (!res.ok) throw new Error(`Failed to generate content for card ${id}: ${res.status}`)
+  return res.json() as Promise<Card>
+}

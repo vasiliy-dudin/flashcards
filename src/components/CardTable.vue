@@ -47,7 +47,11 @@
             </td>
             <template v-for="colDef in enabledColumnDefs" :key="colDef.id">
               <td v-if="colDef.id === 'transcription'" class="card-table__td card-table__td--audio">
+                <span v-if="isGenerating(card)" class="spinner card-table__spinner" role="status">
+                  <span class="sr-only">Generating AI data</span>
+                </span>
                 <AppButton
+                  v-else
                   variant="ghost"
                   size="icon"
                   :disabled="!card.audioUrl"
@@ -94,6 +98,7 @@ import { ALL_TABLE_COLUMNS } from '../types'
 import { formatDate } from '../utils/formatDate'
 import { getCardDueStatus } from '../utils/cardStatus'
 import { useSettingsStore } from '../stores/settings'
+import { useCardsStore } from '../stores/cards'
 import AppButton from './AppButton.vue'
 import CardActionMenu from './CardActionMenu.vue'
 import CardEditModal from './CardEditModal.vue'
@@ -123,7 +128,12 @@ const emit = defineEmits<{
 }>()
 
 const settingsStore = useSettingsStore()
+const cardsStore = useCardsStore()
 const editingCard = ref<Card | null>(null)
+
+function isGenerating(card: Card): boolean {
+  return cardsStore.pendingGenerationIds.has(card.id)
+}
 
 const ALL_COLUMN_DEFS: ColumnDef[] = ALL_TABLE_COLUMNS.map(id => COLUMN_DEFS[id])
 
@@ -303,6 +313,10 @@ function playAudio(card: Card): void {
   width: 40px;
   padding: 0 var(--space-2);
   text-align: center;
+}
+
+.card-table__spinner {
+  vertical-align: middle;
 }
 
 .card-table__th--actions,

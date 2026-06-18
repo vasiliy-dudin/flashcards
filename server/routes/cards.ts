@@ -83,10 +83,32 @@ app.post('/:id/regenerate-example', async (c) => {
   try {
     const result = await generationQueue.enqueue(card.word)
     const [row] = db.update(cards).set({ aiExample: result.aiExample }).where(eq(cards.id, id)).returning().all()
+    if (!row) return c.json({ error: 'Card not found' }, 404)
     return c.json(row)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     console.error('[cards] regenerate-example failed:', card.word, message)
+    return c.json({ error: message }, 503)
+  }
+})
+
+app.post('/:id/generate-content', async (c) => {
+  const id = c.req.param('id')
+  const card = db.select().from(cards).where(eq(cards.id, id)).get()
+  if (!card) return c.json({ error: 'Card not found' }, 404)
+
+  try {
+    const result = await generationQueue.enqueue(card.word)
+    const [row] = db.update(cards)
+      .set({ dictionary: result.dictionary, aiExample: result.aiExample })
+      .where(eq(cards.id, id))
+      .returning()
+      .all()
+    if (!row) return c.json({ error: 'Card not found' }, 404)
+    return c.json(row)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('[cards] generate-content failed:', card.word, message)
     return c.json({ error: message }, 503)
   }
 })

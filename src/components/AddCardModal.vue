@@ -69,7 +69,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useCardsStore } from '../stores/cards'
 import { useTagsStore } from '../stores/tags'
 import { useSettingsStore } from '../stores/settings'
-import { createCard } from '../api/cards'
+import { createCard, updateCard as updateCardApi } from '../api/cards'
 import type { Card, DictionaryEntry } from '../types'
 import TagsInput from './TagsInput.vue'
 import AppButton from './AppButton.vue'
@@ -172,38 +172,52 @@ async function handleSubmit(): Promise<void> {
   if (!trimmedWord || !trimmedDefinition) return
   isLoading.value = true
   error.value = ''
+  const today = new Date().toISOString().slice(0, 10)
+  const card: Card = {
+    id: crypto.randomUUID(),
+    word: trimmedWord,
+    definition: trimmedDefinition,
+    examples: examples.value.split('\n').map(s => s.trim()).filter(Boolean),
+    dictionary: { transcription: '', meanings: [] },
+    aiExample: '',
+    audioUrl: null,
+    deckId: props.deckId,
+    tags: tags.value,
+    interval: 1,
+    dueDate: today,
+    createdAt: today,
+    inReview: false,
+    archived: false,
+    stability: null,
+    difficulty: null,
+  }
   try {
-    const [content, audioUrl] = await Promise.all([fetchCardContent(trimmedWord), fetchAudio(trimmedWord)])
-    const today = new Date().toISOString().slice(0, 10)
-    const card: Card = {
-      id: crypto.randomUUID(),
-      word: trimmedWord,
-      definition: trimmedDefinition,
-      examples: examples.value.split('\n').map(s => s.trim()).filter(Boolean),
-      dictionary: content.dictionary,
-      aiExample: content.aiExample,
-      audioUrl,
-      deckId: props.deckId,
-      tags: tags.value,
-      interval: 1,
-      dueDate: today,
-      createdAt: today,
-      inReview: false,
-      archived: false,
-      stability: null,
-      difficulty: null,
-    }
     const saved = await createCard(card)
     cardsStore.addCard(saved)
     tags.value.forEach(tag => tagsStore.upsertTag(tag))
     isLoading.value = false
     close()
+    generateContentInBackground(saved.id, trimmedWord)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Something went wrong.'
     console.error('[AddCardModal] Card creation failed:', trimmedWord, err)
   } finally {
     isLoading.value = false
   }
+}
+
+function generateContentInBackground(id: string, term: string): void {
+  cardsStore.startGenerating(id)
+  Promise.all([fetchCardContent(term), fetchAudio(term)])
+    .then(async ([content, audioUrl]) => {
+      const patch = { dictionary: content.dictionary, aiExample: content.aiExample, audioUrl }
+      await updateCardApi(id, patch)
+      cardsStore.updateCard(id, patch)
+    })
+    .catch(err => {
+      console.error('[AddCardModal] Background generation failed:', id, term, err)
+    })
+    .finally(() => cardsStore.stopGenerating(id))
 }
 </script>
 

@@ -60,7 +60,19 @@
                 </svg>
               </AppButton>
             </div>
-            <p class="card-detail__ai-example">{{ card.aiExample }}</p>
+            <p class="card-detail__ai-example">
+              <template v-for="(part, index) in aiExampleParts" :key="index">
+                <strong v-if="part.bold">{{ part.text }}</strong>
+                <template v-else>{{ part.text }}</template>
+              </template>
+            </p>
+            <p v-if="regenerateExampleError" class="card-detail__error">{{ regenerateExampleError }}</p>
+          </section>
+
+          <section v-else class="card-detail__section">
+            <AppButton variant="ghost" :disabled="isRegeneratingExample" @click="handleRegenerateExample">
+              {{ isRegeneratingExample ? 'Generating…' : 'Generate AI data' }}
+            </AppButton>
             <p v-if="regenerateExampleError" class="card-detail__error">{{ regenerateExampleError }}</p>
           </section>
         </div>
@@ -93,10 +105,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { Card } from '../types'
 import { formatDate } from '../utils/formatDate'
-import { regenerateExample } from '../api/cards'
+import { splitHighlight } from '../utils/highlightWord'
+import { regenerateExample, generateContent } from '../api/cards'
+import { useCardsStore } from '../stores/cards'
 import CardEditModal from './CardEditModal.vue'
 import CardActionMenu from './CardActionMenu.vue'
 import AppButton from './AppButton.vue'
@@ -107,21 +121,28 @@ const emit = defineEmits<{
   'card-updated': [card: Card]
 }>()
 
+const cardsStore = useCardsStore()
 const showEditModal = ref(false)
 const isRegeneratingExample = ref(false)
 const regenerateExampleError = ref('')
+
+const aiExampleParts = computed(() => splitHighlight(props.card.aiExample, props.card.word))
 
 async function handleRegenerateExample(): Promise<void> {
   if (isRegeneratingExample.value) return
   isRegeneratingExample.value = true
   regenerateExampleError.value = ''
+  cardsStore.startGenerating(props.card.id)
   try {
-    const updated = await regenerateExample(props.card.id)
+    const updated = props.card.aiExample
+      ? await regenerateExample(props.card.id)
+      : await generateContent(props.card.id)
     emit('card-updated', updated)
   } catch (err) {
     regenerateExampleError.value = err instanceof Error ? err.message : 'Failed to regenerate example.'
     console.error('[CardDetailModal] regenerateExample failed:', props.card.id, err)
   } finally {
+    cardsStore.stopGenerating(props.card.id)
     isRegeneratingExample.value = false
   }
 }

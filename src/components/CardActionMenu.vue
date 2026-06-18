@@ -40,6 +40,12 @@
             :disabled="isUpdating"
             @click="onToggleArchive"
           >{{ card.archived ? 'Unarchive' : 'Archive' }}</button>
+          <button
+            v-if="!card.aiExample"
+            class="card-action-menu__item"
+            :disabled="isUpdating"
+            @click="onGenerateContent"
+          >Generate AI data</button>
           <hr class="card-action-menu__divider" />
           <button
             class="card-action-menu__item card-action-menu__item--danger"
@@ -56,7 +62,7 @@
 import { ref, onUnmounted } from 'vue'
 import { useFloating, flip, shift, offset } from '@floating-ui/vue'
 import type { Card } from '../types'
-import { updateCard as updateCardApi, deleteCard as deleteCardApi } from '../api/cards'
+import { updateCard as updateCardApi, deleteCard as deleteCardApi, generateContent as generateContentApi } from '../api/cards'
 import { useCardsStore } from '../stores/cards'
 import { useTagsStore } from '../stores/tags'
 import AppButton from './AppButton.vue'
@@ -161,6 +167,23 @@ async function onToggleArchive(): Promise<void> {
   } catch (err) {
     console.error('[CardActionMenu] toggleArchive failed:', card.id, err)
   } finally {
+    isUpdating.value = false
+  }
+}
+
+async function onGenerateContent(): Promise<void> {
+  if (isUpdating.value) return
+  isUpdating.value = true
+  closeMenu()
+  cardsStore.startGenerating(card.id)
+  try {
+    const updated = await generateContentApi(card.id)
+    cardsStore.updateCard(card.id, { dictionary: updated.dictionary, aiExample: updated.aiExample })
+    emit('updated', updated)
+  } catch (err) {
+    console.error('[CardActionMenu] generateContent failed:', card.id, err)
+  } finally {
+    cardsStore.stopGenerating(card.id)
     isUpdating.value = false
   }
 }

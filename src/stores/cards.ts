@@ -4,6 +4,7 @@ import type { Card } from '../types'
 
 export const useCardsStore = defineStore('cards', () => {
   const cards = ref<Card[]>([])
+  const pendingGenerationIds = ref<Set<string>>(new Set())
 
   function addCard(card: Card): void {
     cards.value.push(card)
@@ -28,5 +29,23 @@ export const useCardsStore = defineStore('cards', () => {
     return cards.value.find((c) => c.id === id)
   }
 
-  return { cards, setCards, addCard, removeCard, updateCard, getCardById }
+  function startGenerating(id: string): void {
+    pendingGenerationIds.value.add(id)
+  }
+
+  function stopGenerating(id: string): void {
+    pendingGenerationIds.value.delete(id)
+  }
+
+  return {
+    cards,
+    pendingGenerationIds,
+    setCards,
+    addCard,
+    removeCard,
+    updateCard,
+    getCardById,
+    startGenerating,
+    stopGenerating,
+  }
 })

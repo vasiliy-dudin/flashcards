@@ -66,7 +66,12 @@
 
               <section v-if="currentCard.aiExample" class="inbox__reveal-section">
                 <h3 class="inbox__reveal-label">AI Example</h3>
-                <p class="inbox__notes">{{ currentCard.aiExample }}</p>
+                <p class="inbox__notes">
+                  <template v-for="(part, index) in aiExampleParts" :key="index">
+                    <strong v-if="part.bold">{{ part.text }}</strong>
+                    <template v-else>{{ part.text }}</template>
+                  </template>
+                </p>
               </section>
             </div>
           </div>
@@ -115,6 +120,7 @@ import { useCardsStore } from '../stores/cards'
 import { useSettingsStore } from '../stores/settings'
 import { scheduleCardFsrs, type FsrsGrade } from '../utils/fsrs'
 import { buildReviewQueue } from '../utils/buildReviewQueue'
+import { splitHighlight } from '../utils/highlightWord'
 import { updateCard as updateCardApi } from '../api/cards'
 import { useOnline } from '../composables/useOnline'
 import { addPendingReview } from '../lib/offline-store'
@@ -134,6 +140,7 @@ const editingCard = ref<Card | null>(null)
 const currentCard = computed<Card | undefined>(() => queue.value[0])
 const reviewedCount = computed<number>(() => totalCount.value - queue.value.length)
 const isReverse = computed<boolean>(() => settingsStore.settings.reviewInReverse)
+const aiExampleParts = computed(() => splitHighlight(currentCard.value?.aiExample ?? '', currentCard.value?.word ?? ''))
 
 onMounted(async () => {
   if (isOnline.value) {
