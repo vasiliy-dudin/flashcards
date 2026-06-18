@@ -45,8 +45,23 @@
           </section>
 
           <section v-if="card.aiExample" class="card-detail__section">
-            <h3 class="card-detail__section-title">AI Example</h3>
+            <div class="card-detail__section-header">
+              <h3 class="card-detail__section-title">AI Example</h3>
+              <AppButton
+                variant="ghost"
+                size="icon"
+                aria-label="Regenerate AI example"
+                :disabled="isRegeneratingExample"
+                @click="handleRegenerateExample"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M13.65 4.35A6 6 0 1 0 14 8" />
+                  <path d="M14 2v3h-3" />
+                </svg>
+              </AppButton>
+            </div>
             <p class="card-detail__ai-example">{{ card.aiExample }}</p>
+            <p v-if="regenerateExampleError" class="card-detail__error">{{ regenerateExampleError }}</p>
           </section>
         </div>
 
@@ -81,6 +96,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import type { Card } from '../types'
 import { formatDate } from '../utils/formatDate'
+import { regenerateExample } from '../api/cards'
 import CardEditModal from './CardEditModal.vue'
 import CardActionMenu from './CardActionMenu.vue'
 import AppButton from './AppButton.vue'
@@ -92,6 +108,23 @@ const emit = defineEmits<{
 }>()
 
 const showEditModal = ref(false)
+const isRegeneratingExample = ref(false)
+const regenerateExampleError = ref('')
+
+async function handleRegenerateExample(): Promise<void> {
+  if (isRegeneratingExample.value) return
+  isRegeneratingExample.value = true
+  regenerateExampleError.value = ''
+  try {
+    const updated = await regenerateExample(props.card.id)
+    emit('card-updated', updated)
+  } catch (err) {
+    regenerateExampleError.value = err instanceof Error ? err.message : 'Failed to regenerate example.'
+    console.error('[CardDetailModal] regenerateExample failed:', props.card.id, err)
+  } finally {
+    isRegeneratingExample.value = false
+  }
+}
 
 function close(): void {
   emit('update:modelValue', false)
@@ -205,6 +238,21 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: var(--space-2);
+}
+
+.card-detail__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.card-detail__error {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  background-color: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
 }
 
 .card-detail__meanings,

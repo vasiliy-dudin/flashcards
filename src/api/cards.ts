@@ -31,3 +31,9 @@ export async function deleteCard(id: string): Promise<void> {
   const res = await apiFetch(`/api/cards/${id}`, { method: 'DELETE' })
   if (!res.ok) throw new Error(`Failed to delete card ${id}: ${res.status}`)
 }
+
+export async function regenerateExample(id: string): Promise<Card> {
+  const res = await apiFetch(`/api/cards/${id}/regenerate-example`, { method: 'POST' })
+  if (!res.ok) throw new Error(`Failed to regenerate example for card ${id}: ${res.status}`)
+  return res.json() as Promise<Card>
+}

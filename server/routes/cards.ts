@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { cards } from '../db/schema.js'
 import { generateAudio } from '../services/tts.js'
+import { generationQueue } from '../services/generationQueue.js'
 
 type CardInsert = typeof cards.$inferInsert
 
@@ -71,6 +72,22 @@ app.put('/:id', async (c) => {
     const message = err instanceof Error ? err.message : String(err)
     console.error('[cards] PUT update failed:', message)
     return c.json({ error: `DB update failed: ${message}` }, 500)
+  }
+})
+
+app.post('/:id/regenerate-example', async (c) => {
+  const id = c.req.param('id')
+  const card = db.select().from(cards).where(eq(cards.id, id)).get()
+  if (!card) return c.json({ error: 'Card not found' }, 404)
+
+  try {
+    const result = await generationQueue.enqueue(card.word)
+    const [row] = db.update(cards).set({ aiExample: result.aiExample }).where(eq(cards.id, id)).returning().all()
+    return c.json(row)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('[cards] regenerate-example failed:', card.word, message)
+    return c.json({ error: message }, 503)
   }
 })
 
