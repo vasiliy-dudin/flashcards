@@ -136,7 +136,11 @@ async function fetchCardContent(term: string): Promise<{ dictionary: DictionaryE
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ word: term, customPrompt }),
     })
-    if (!res.ok) return degraded
+    if (!res.ok) {
+      const errorBody = await res.json().catch(() => null) as { error?: string } | null
+      console.error('[AddCardModal] generate-card-content failed:', term, errorBody?.error ?? res.status)
+      return degraded
+    }
     const raw = await res.json() as { dictionary?: { transcription?: string; meanings?: string[] }; aiExample?: string }
     return {
       dictionary: { transcription: raw.dictionary?.transcription ?? '', meanings: raw.dictionary?.meanings ?? [] },

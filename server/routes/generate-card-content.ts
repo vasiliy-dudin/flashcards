@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { createLlmProvider } from '../services/llm.js'
+import { generationQueue } from '../services/generationQueue.js'
 
 const app = new Hono()
 
@@ -25,8 +25,7 @@ app.post('/', async (c) => {
   const customPrompt = typeof bodyObj.customPrompt === 'string' ? bodyObj.customPrompt.trim() : undefined
 
   try {
-    const provider = createLlmProvider()
-    const result = await provider.generateCardContent(word, customPrompt)
+    const result = await generationQueue.enqueue(word, customPrompt)
     return c.json(result)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Content generation failed'

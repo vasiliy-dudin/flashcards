@@ -39,3 +39,9 @@ export const tags = sqliteTable('tags', {
   name:      text('name').primaryKey(),
   cardCount: integer('card_count').notNull(),
 })
+
+export const llmUsage = sqliteTable('llm_usage', {
+  /** ISO date YYYY-MM-DD */
+  date:         text('date').primaryKey(),
+  requestCount: integer('request_count').notNull(),
+})

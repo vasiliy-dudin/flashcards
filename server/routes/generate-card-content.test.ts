@@ -2,11 +2,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import app from './generate-card-content.js'
 
-vi.mock('../services/llm.js', () => ({
-  createLlmProvider: vi.fn(),
+vi.mock('../services/generationQueue.js', () => ({
+  generationQueue: { enqueue: vi.fn() },
 }))
 
-import { createLlmProvider } from '../services/llm.js'
+import { generationQueue } from '../services/generationQueue.js'
 
 const MOCK_RESULT = {
   dictionary: {
@@ -41,10 +41,10 @@ describe('POST /api/generate-card-content', () => {
     expect(res.status).toBe(400)
   })
 
-  it('returns 503 when LLM provider throws (e.g. missing API key)', async () => {
-    vi.mocked(createLlmProvider).mockImplementation(() => {
-      throw new Error('GEMINI_API_KEY environment variable is not set')
-    })
+  it('returns 503 when the queue rejects (e.g. missing API key)', async () => {
+    vi.mocked(generationQueue.enqueue).mockRejectedValue(
+      new Error('GEMINI_API_KEY environment variable is not set'),
+    )
 
     const res = await app.request('/', {
       method: 'POST',
@@ -57,9 +57,7 @@ describe('POST /api/generate-card-content', () => {
   })
 
   it('returns 200 with LlmResponse on success', async () => {
-    vi.mocked(createLlmProvider).mockReturnValue({
-      generateCardContent: vi.fn().mockResolvedValue(MOCK_RESULT),
-    })
+    vi.mocked(generationQueue.enqueue).mockResolvedValue(MOCK_RESULT)
 
     const res = await app.request('/', {
       method: 'POST',
@@ -68,12 +66,11 @@ describe('POST /api/generate-card-content', () => {
     })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual(MOCK_RESULT)
+    expect(generationQueue.enqueue).toHaveBeenCalledWith('ephemeral', undefined)
   })
 
-  it('returns 503 when generateCardContent rejects (network error)', async () => {
-    vi.mocked(createLlmProvider).mockReturnValue({
-      generateCardContent: vi.fn().mockRejectedValue(new Error('Network timeout')),
-    })
+  it('returns 503 when the queue rejects (network error)', async () => {
+    vi.mocked(generationQueue.enqueue).mockRejectedValue(new Error('Network timeout'))
 
     const res = await app.request('/', {
       method: 'POST',
@@ -81,5 +78,18 @@ describe('POST /api/generate-card-content', () => {
       body: JSON.stringify({ word: 'ephemeral' }),
     })
     expect(res.status).toBe(503)
+  })
+
+  it('returns 503 with a distinct message when the daily generation cap is reached', async () => {
+    vi.mocked(generationQueue.enqueue).mockRejectedValue(new Error('Daily generation limit reached'))
+
+    const res = await app.request('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ word: 'ephemeral' }),
+    })
+    expect(res.status).toBe(503)
+    const json = await res.json() as { error: string }
+    expect(json.error).toBe('Daily generation limit reached')
   })
 })

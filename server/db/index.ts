@@ -37,6 +37,20 @@ function applyStartupPatches(): void {
     sqlite.prepare("ALTER TABLE cards ADD COLUMN difficulty REAL").run()
     console.log('[db] Applied difficulty column via startup patch')
   }
+  if (!columns.some(c => c.name === 'category')) {
+    sqlite.prepare("ALTER TABLE cards ADD COLUMN category TEXT NOT NULL DEFAULT 'General'").run()
+    console.log('[db] Applied category column via startup patch')
+  }
+
+  const llmUsageTable = sqlite.prepare(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'llm_usage'",
+  ).get()
+  if (!llmUsageTable) {
+    sqlite.prepare(
+      "CREATE TABLE llm_usage (date TEXT PRIMARY KEY, request_count INTEGER NOT NULL)",
+    ).run()
+    console.log('[db] Created llm_usage table via startup patch')
+  }
 }
 
 migrate(db, { migrationsFolder: MIGRATIONS_DIR })
