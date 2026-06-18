@@ -77,17 +77,20 @@ export class GenerationQueue {
 
   private async flushGroup(group: PendingRequest[]): Promise<void> {
     try {
-      await rateLimiter.acquire()
-      const { allowed } = incrementAndCheck()
-      if (!allowed) {
-        throw new Error('Daily generation limit reached')
-      }
-
       const words = group.map((item) => item.word)
       const customPrompt = group[0].customPrompt
       const provider = this.createProvider()
       const results = await retryWithBackoff(
-        () => provider.generateCardContentBatch(words, customPrompt),
+        async () => {
+          // Rate-limit and daily-cap gates must run on every attempt, not just the first —
+          // a retry is still a real upstream request and must count against both limits.
+          await rateLimiter.acquire()
+          const { allowed } = incrementAndCheck()
+          if (!allowed) {
+            throw new Error('Daily generation limit reached')
+          }
+          return provider.generateCardContentBatch(words, customPrompt)
+        },
         { maxAttempts: MAX_RETRY_ATTEMPTS, isRetryable: isRetryableLlmError },
       )
       const normalizedResults = new Map(

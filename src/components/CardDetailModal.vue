@@ -111,6 +111,7 @@ import { formatDate } from '../utils/formatDate'
 import { splitHighlight } from '../utils/highlightWord'
 import { regenerateExample, generateContent } from '../api/cards'
 import { useCardsStore } from '../stores/cards'
+import { useSettingsStore } from '../stores/settings'
 import CardEditModal from './CardEditModal.vue'
 import CardActionMenu from './CardActionMenu.vue'
 import AppButton from './AppButton.vue'
@@ -122,6 +123,7 @@ const emit = defineEmits<{
 }>()
 
 const cardsStore = useCardsStore()
+const settingsStore = useSettingsStore()
 const showEditModal = ref(false)
 const isRegeneratingExample = ref(false)
 const regenerateExampleError = ref('')
@@ -133,10 +135,11 @@ async function handleRegenerateExample(): Promise<void> {
   isRegeneratingExample.value = true
   regenerateExampleError.value = ''
   cardsStore.startGenerating(props.card.id)
+  const customPrompt = settingsStore.settings.aiPrompt.trim() || undefined
   try {
     const updated = props.card.aiExample
-      ? await regenerateExample(props.card.id)
-      : await generateContent(props.card.id)
+      ? await regenerateExample(props.card.id, customPrompt)
+      : await generateContent(props.card.id, customPrompt)
     emit('card-updated', updated)
   } catch (err) {
     regenerateExampleError.value = err instanceof Error ? err.message : 'Failed to regenerate example.'

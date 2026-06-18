@@ -6,6 +6,7 @@ import { llmUsage } from '../db/schema.js'
 import { GenerationQueue } from './generationQueue.js'
 import { LlmHttpError } from './llm.js'
 import type { LlmProvider, LlmResponse } from './llm.js'
+import { rateLimiter } from './rateLimiter.js'
 
 const TEST_DATE = '2099-02-02'
 const REQUIRED_ENV_VARS = ['GEMINI_RPM', 'GEMINI_RPD', 'GEMINI_BATCH_SIZE', 'GEMINI_QUEUE_WINDOW_MS'] as const
@@ -122,6 +123,28 @@ describe('GenerationQueue', () => {
 
     expect(result).toEqual(makeResponse('alpha'))
     expect(attempts).toBe(2)
+  })
+
+  it('re-acquires a rate-limit slot and re-checks the daily cap on every retry attempt, not just the first', async () => {
+    setEnv()
+    const acquireSpy = vi.spyOn(rateLimiter, 'acquire')
+    let attempts = 0
+    const batchMock = vi.fn(async (requestedWords: string[]) => {
+      attempts++
+      if (attempts < 3) throw new LlmHttpError(429, 'Too Many Requests')
+      return new Map(requestedWords.map((word) => [word, makeResponse(word)]))
+    })
+    const queue = new GenerationQueue(() => makeFakeProvider(batchMock))
+
+    const promise = queue.enqueue('alpha')
+    await vi.runAllTimersAsync()
+    await promise
+
+    expect(attempts).toBe(3)
+    expect(acquireSpy).toHaveBeenCalledTimes(3)
+
+    const row = db.select().from(llmUsage).where(eq(llmUsage.date, TEST_DATE)).get()
+    expect(row?.requestCount).toBe(3)
   })
 
   it('does not retry a non-retryable LlmHttpError (400) and rejects after a single attempt', async () => {

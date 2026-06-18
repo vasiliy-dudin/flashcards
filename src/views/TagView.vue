@@ -43,6 +43,7 @@
       <AppButton variant="ghost-danger" size="sm" :disabled="isBulkLoading" @click="bulkDelete">Delete</AppButton>
       <AppButton variant="ghost" size="sm" @click="selectedIds = new Set()">Clear</AppButton>
     </div>
+    <p v-if="bulkGenerateError" class="tag-view__bulk-error">{{ bulkGenerateError }}</p>
 
     <CardGrid v-if="viewMode === 'grid'" :cards="sortedFilteredCards" v-model:selectedIds="selectedIds" @open="selectedCard = $event" />
     <CardTable v-else :cards="sortedFilteredCards" v-model:selectedIds="selectedIds" @open="selectedCard = $event" />
@@ -92,6 +93,7 @@ const showArchived = ref(false)
 const selectedCard = ref<Card | null>(null)
 const selectedIds = ref<Set<string>>(new Set())
 const isBulkLoading = ref(false)
+const bulkGenerateError = ref('')
 
 async function bulkUpdate(patch: Partial<Card>): Promise<void> {
   if (isBulkLoading.value) return
@@ -138,15 +140,28 @@ async function bulkGenerateExamples(): Promise<void> {
   isBulkLoading.value = true
   const ids = [...selectedIds.value]
   ids.forEach(id => cardsStore.startGenerating(id))
+  const customPrompt = settingsStore.settings.aiPrompt.trim() || undefined
   try {
-    const updated = await Promise.all(ids.map(id => {
+    const results = await Promise.allSettled(ids.map(id => {
       const card = cardsStore.getCardById(id)
-      return card?.aiExample ? regenerateExampleApi(id) : generateContentApi(id)
+      return card?.aiExample ? regenerateExampleApi(id, customPrompt) : generateContentApi(id, customPrompt)
     }))
-    updated.forEach(card => cardsStore.updateCard(card.id, { dictionary: card.dictionary, aiExample: card.aiExample }))
+    let failureCount = 0
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        const card = result.value
+        cardsStore.updateCard(card.id, { dictionary: card.dictionary, aiExample: card.aiExample })
+      } else {
+        failureCount++
+        console.error('[TagView] Bulk generate failed for card:', ids[index], result.reason)
+      }
+    })
+    if (failureCount > 0) {
+      bulkGenerateError.value = `${failureCount} of ${ids.length} card${ids.length === 1 ? '' : 's'} failed to generate. See console for details.`
+    } else {
+      bulkGenerateError.value = ''
+    }
     selectedIds.value = new Set()
-  } catch (err) {
-    console.error('[TagView] Bulk generate examples failed:', err)
   } finally {
     ids.forEach(id => cardsStore.stopGenerating(id))
     isBulkLoading.value = false
@@ -224,6 +239,14 @@ const sortedFilteredCards = computed(() => sortCards(filteredCards.value, sortVa
   background-color: var(--color-surface-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+}
+
+.tag-view__bulk-error {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  background-color: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
 }
 
 @media (max-width: #{$bp-mobile}) {

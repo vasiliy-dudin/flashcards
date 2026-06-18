@@ -59,6 +59,20 @@ body {
     pointer-events: none;
   }
 }
+
+// Utility: visually hides text while keeping it available to screen readers.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 // Utility: a small rotating-ring loading indicator. Override width/height inline or via a modifier class.
 .spinner {
   display: inline-block;

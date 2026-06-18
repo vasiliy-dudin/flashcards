@@ -18,6 +18,12 @@ function isCardBody(value: unknown): value is CardInsert {
   return REQUIRED_FIELDS.every(field => field in obj)
 }
 
+function readCustomPrompt(body: unknown): string | undefined {
+  if (typeof body !== 'object' || body === null) return undefined
+  const value = (body as Record<string, unknown>).customPrompt
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined
+}
+
 const app = new Hono()
 
 app.get('/', (c) => {
@@ -80,8 +86,11 @@ app.post('/:id/regenerate-example', async (c) => {
   const card = db.select().from(cards).where(eq(cards.id, id)).get()
   if (!card) return c.json({ error: 'Card not found' }, 404)
 
+  const body: unknown = await c.req.json().catch(() => null)
+  const customPrompt = readCustomPrompt(body)
+
   try {
-    const result = await generationQueue.enqueue(card.word)
+    const result = await generationQueue.enqueue(card.word, customPrompt)
     const [row] = db.update(cards).set({ aiExample: result.aiExample }).where(eq(cards.id, id)).returning().all()
     if (!row) return c.json({ error: 'Card not found' }, 404)
     return c.json(row)
@@ -97,8 +106,11 @@ app.post('/:id/generate-content', async (c) => {
   const card = db.select().from(cards).where(eq(cards.id, id)).get()
   if (!card) return c.json({ error: 'Card not found' }, 404)
 
+  const body: unknown = await c.req.json().catch(() => null)
+  const customPrompt = readCustomPrompt(body)
+
   try {
-    const result = await generationQueue.enqueue(card.word)
+    const result = await generationQueue.enqueue(card.word, customPrompt)
     const [row] = db.update(cards)
       .set({ dictionary: result.dictionary, aiExample: result.aiExample })
       .where(eq(cards.id, id))

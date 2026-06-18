@@ -65,7 +65,24 @@ describe('POST /api/cards/:id/regenerate-example', () => {
     const json = await res.json() as typeof cards.$inferSelect
     expect(json.aiExample).toBe('A brand new example sentence.')
     expect(json.dictionary).toEqual({ transcription: '', meanings: [] })
-    expect(generationQueue.enqueue).toHaveBeenCalledWith('serendipity')
+    expect(generationQueue.enqueue).toHaveBeenCalledWith('serendipity', undefined)
+  })
+
+  it('passes a customPrompt from the request body through to the queue', async () => {
+    insertTestCard()
+    vi.mocked(generationQueue.enqueue).mockResolvedValue({
+      dictionary: { transcription: '', meanings: [] },
+      aiExample: 'A custom example sentence.',
+    })
+
+    const res = await app.request(`/${TEST_CARD_ID}/regenerate-example`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customPrompt: 'Use a nautical theme' }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(generationQueue.enqueue).toHaveBeenCalledWith('serendipity', 'Use a nautical theme')
   })
 
   it('returns 503 and leaves the existing aiExample untouched when generation fails', async () => {
@@ -137,7 +154,24 @@ describe('POST /api/cards/:id/generate-content', () => {
     const json = await res.json() as typeof cards.$inferSelect
     expect(json.dictionary).toEqual({ transcription: '/ɪˈfemərəl/', meanings: ['lasting for a very short time'] })
     expect(json.aiExample).toBe('The beauty of cherry blossoms is ephemeral.')
-    expect(generationQueue.enqueue).toHaveBeenCalledWith('ephemeral')
+    expect(generationQueue.enqueue).toHaveBeenCalledWith('ephemeral', undefined)
+  })
+
+  it('passes a customPrompt from the request body through to the queue', async () => {
+    insertEmptyTestCard()
+    vi.mocked(generationQueue.enqueue).mockResolvedValue({
+      dictionary: { transcription: '', meanings: [] },
+      aiExample: 'A custom example sentence.',
+    })
+
+    const res = await app.request(`/${GENERATE_CONTENT_CARD_ID}/generate-content`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customPrompt: 'Use a nautical theme' }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(generationQueue.enqueue).toHaveBeenCalledWith('ephemeral', 'Use a nautical theme')
   })
 
   it('returns 503 and leaves existing data untouched when generation fails', async () => {

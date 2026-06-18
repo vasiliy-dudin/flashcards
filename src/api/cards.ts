@@ -32,14 +32,22 @@ export async function deleteCard(id: string): Promise<void> {
   if (!res.ok) throw new Error(`Failed to delete card ${id}: ${res.status}`)
 }
 
-export async function regenerateExample(id: string): Promise<Card> {
-  const res = await apiFetch(`/api/cards/${id}/regenerate-example`, { method: 'POST' })
+export async function regenerateExample(id: string, customPrompt?: string): Promise<Card> {
+  const res = await apiFetch(`/api/cards/${id}/regenerate-example`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ customPrompt }),
+  })
   if (!res.ok) throw new Error(`Failed to regenerate example for card ${id}: ${res.status}`)
   return res.json() as Promise<Card>
 }
 
-export async function generateContent(id: string): Promise<Card> {
-  const res = await apiFetch(`/api/cards/${id}/generate-content`, { method: 'POST' })
+export async function generateContent(id: string, customPrompt?: string): Promise<Card> {
+  const res = await apiFetch(`/api/cards/${id}/generate-content`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ customPrompt }),
+  })
   if (!res.ok) throw new Error(`Failed to generate content for card ${id}: ${res.status}`)
   return res.json() as Promise<Card>
 }

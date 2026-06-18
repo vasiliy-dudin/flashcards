@@ -65,6 +65,7 @@ import type { Card } from '../types'
 import { updateCard as updateCardApi, deleteCard as deleteCardApi, generateContent as generateContentApi } from '../api/cards'
 import { useCardsStore } from '../stores/cards'
 import { useTagsStore } from '../stores/tags'
+import { useSettingsStore } from '../stores/settings'
 import AppButton from './AppButton.vue'
 
 const { card, showEdit = true, size = 'icon' } = defineProps<{
@@ -80,6 +81,7 @@ const emit = defineEmits<{
 
 const cardsStore = useCardsStore()
 const tagsStore = useTagsStore()
+const settingsStore = useSettingsStore()
 
 const menuOpen = ref(false)
 const showDeleteConfirm = ref(false)
@@ -176,8 +178,9 @@ async function onGenerateContent(): Promise<void> {
   isUpdating.value = true
   closeMenu()
   cardsStore.startGenerating(card.id)
+  const customPrompt = settingsStore.settings.aiPrompt.trim() || undefined
   try {
-    const updated = await generateContentApi(card.id)
+    const updated = await generateContentApi(card.id, customPrompt)
     cardsStore.updateCard(card.id, { dictionary: updated.dictionary, aiExample: updated.aiExample })
     emit('updated', updated)
   } catch (err) {
