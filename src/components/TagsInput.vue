@@ -59,7 +59,8 @@ const dropdownStyle = ref({ top: '0px', left: '0px', width: '0px' })
 
 const filteredSuggestions = computed((): string[] => {
   if (!props.suggestions?.length) return []
-  const available = props.suggestions.filter(s => !props.modelValue.includes(s))
+  const selectedLower = props.modelValue.map(t => t.toLowerCase())
+  const available = props.suggestions.filter(s => !selectedLower.includes(s.toLowerCase()))
   if (!draft.value) return available.slice(0, MAX_SUGGESTIONS)
   const query = draft.value.toLowerCase()
   return available.filter(s => s.toLowerCase().startsWith(query)).slice(0, MAX_SUGGESTIONS)
@@ -105,15 +106,17 @@ function onContainerClick(e: MouseEvent): void {
 }
 
 function confirmDraft(): void {
-  const tag = draft.value.trim().toLowerCase()
-  if (tag && !props.modelValue.includes(tag)) {
+  const tag = draft.value.trim()
+  const isDuplicate = props.modelValue.some(t => t.toLowerCase() === tag.toLowerCase())
+  if (tag && !isDuplicate) {
     emit('update:modelValue', [...props.modelValue, tag])
   }
   draft.value = ''
 }
 
 function selectSuggestion(suggestion: string): void {
-  if (!props.modelValue.includes(suggestion)) {
+  const isDuplicate = props.modelValue.some(t => t.toLowerCase() === suggestion.toLowerCase())
+  if (!isDuplicate) {
     emit('update:modelValue', [...props.modelValue, suggestion])
   }
   activeIndex.value = -1
